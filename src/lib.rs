@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/cargo-rx/0.0.1")]
+#![doc(html_root_url = "https://docs.rs/cargo-rx/0.1.0")]
 #![warn(rust_2018_idioms, missing_docs)]
 #![deny(warnings, dead_code, unused_imports, unused_mut)]
 
@@ -8,15 +8,40 @@
 //! [crates-io]: https://img.shields.io/badge/crates.io-fc8d62?style=for-the-badge&labelColor=555555&logo=rust
 //! [docs-rs]: https://img.shields.io/badge/docs.rs-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K
 //!
-//! <br>
+//! > **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a Cargo project.**
 //!
-//! **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a Cargo project.**
-//!
-//! This tool extends [Cargo] to allow you to easily run examples from the command line. It contains `rx` and `cargo rx`.
+//! This tool extends [Cargo] to allow you to easily run examples from the command line.
+//! It provides a single executable: `rx`.
 //!
 //! [Cargo]: http://doc.crates.io/
 //!
+//!
 //! <br>
+//!
+//! ## Demo
+//!
+//! [![rx demo](https://asciinema.org/a/483363.svg)](https://asciinema.org/a/483363)
+//!
+//! Basically anywhere you would use `cargo run --example` in a Rust project, try `rx` instead.
+//!
+//! ## Install
+//!
+//! Ensure that you have a fairly recent version of [rust/cargo] installed. Then, run:
+//!
+//! [rust/cargo]: https://doc.rust-lang.org/cargo/getting-started/installation.html
+//! ```shell
+//! $ cargo install cargo-rx
+//! ```
+//! *Compiler support: requires rustc 1.58+*
+//!
+//! ### Windows
+//!
+//! Note that on a *Windows* environment, you will also need to have [`fzf`](https://github.com/junegunn/fzf)
+//! installed and available in your *$PATH* variable.
+//!
+//! There is currently a [feature request](https://github.com/lotabout/skim/issues/293) open on `skim`
+//! which proposes adding support for Windows, but this has not been currently implemented yet --
+//! thus, the `fzf` tool serves as a stand-in alternative for now.
 //!
 //! ## Usage
 //!
@@ -26,7 +51,11 @@
 //! $ rx
 //! ```
 //!
-//! Basically anywhere you would use `cargo run --example` in a Rust project, try `rx` instead.
+//! If you want to run a specific example, you can alternatively do that as well:
+//!
+//! ```console
+//! $ rx my_example -- --my-arg "argument to pass in to example"
+//! ```
 //!
 //! ## Examples
 //!

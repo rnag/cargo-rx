@@ -1,13 +1,13 @@
 [package]
 name = "cargo-rx"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Ritvik Nag <rv.kvetch@gmail.com>"]
-description = "A simple, modern example runner that extends Cargo to allow you to easily run examples from the command line. It contains `rx` and `cargo rx`."
+description = "A simple, modern example runner that extends Cargo to allow you to easily run examples from the command line. It comes with the `rx` command."
 documentation = "https://docs.rs/cargo-rx"
 homepage = "https://github.com/rnag/cargo-rx"
 repository = "https://github.com/rnag/cargo-rx"
 readme = "README.md"
-keywords = ["cargo", "subcommand", "cli", "examples", "run-example"]
+keywords = ["examples", "run-example", "cargo", "subcommand", "cli"]
 categories = [
     "development-tools",
     "development-tools::cargo-plugins",
@@ -15,25 +15,18 @@ categories = [
 license = "MIT"
 edition = "2021"
 
+# See here for more info: https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["x86_64-unknown-linux-gnu"]
+
 [profile.release]
 strip = "symbols"
 
 [[bin]]
 name = "rx"
 path = "src/main.rs"
-
-# See info on command aliases at https://doc.rust-lang.org/cargo/reference/config.html#alias
-
-[alias]
-run-example = "rx"
-rr = "rx --replay"
-rl = "rx --release"
-
-# See here for more info: https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
-
-[package.metadata.docs.rs]
-all-features = true
-targets = ["x86_64-unknown-linux-gnu"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
