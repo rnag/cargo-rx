@@ -11,9 +11,7 @@
 
 [Cargo]: http://doc.crates.io/
 
----
-
-this crate provides a single executable: `rx`.
+This crate provides a single executable: `rx`.
 Basically anywhere you would use `cargo run --example` in a
 Rust project, run `rx` instead.
 
@@ -23,8 +21,9 @@ Rust project, run `rx` instead.
 
 # Installation
 
-Ensure that you have a fairly recent version of rust/cargo installed. Then, run:
+Ensure that you have a fairly recent version of [rust/cargo] installed. Then, run:
 
+[rust/cargo]: https://doc.rust-lang.org/cargo/getting-started/installation.html
 ```shell
 $ cargo install cargo-rx
 ```
