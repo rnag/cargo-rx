@@ -62,6 +62,8 @@ skim = "0.9.4"
 clap = { version = "3.*", features = ["derive"] }
 log = "*"
 sensible-env-logger = "0.*"
+# version_sync: to ensure versions in `Cargo.toml` and `README.md` are in sync
+version-sync = "0.9.*"
 
 ### FEATURES #################################################################
 

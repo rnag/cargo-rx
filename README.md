@@ -7,6 +7,8 @@
 
 **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a [Cargo] project.**
 
+[![rx demo](https://asciinema.org/a/483363.svg)](https://asciinema.org/a/483363)
+
 [Cargo]: http://doc.crates.io/
 
 ---
@@ -53,4 +55,4 @@ will be accepted under the same license.
 
 ## Authors
 
-* [Ritvik Nag](https://github.com/rnag)
+* `cargo-rx` is brought to you by [Ritvik Nag](https://github.com/rnag).
