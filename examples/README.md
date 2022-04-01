@@ -17,11 +17,16 @@ Then, simply `cd` into the project folder:
 ❯❯ cd cargo-rx
 ```
 
-From here, you can use `cargo` to build and run
+Install the project locally via Cargo:
+```shell
+❯❯ cargo install --path .
+```
+
+From here, you can use the `rx` binary to build and run
 any of the examples individually.
 
-In particular, here's a sample usage of running `examples/my_example.rs`:
+In particular, here's a sample usage of running `examples/logging.rs`:
 
 ```shell
-❯❯ cargo run --example my_example
+❯❯ rx logging
 ```

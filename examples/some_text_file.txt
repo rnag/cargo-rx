@@ -1,0 +1,1 @@
+This is a test document. This file shouldn't get picked up by the main Example Runner script.

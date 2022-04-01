@@ -2,26 +2,32 @@
 name = "cargo-rx"
 version = "0.0.1"
 authors = ["Ritvik Nag <rv.kvetch@gmail.com>"]
-description = "A modern Cargo subcommand to easilily run examples"
+description = "A simple, modern example runner that extends Cargo to allow you to easily run examples from the command line. It contains `rx` and `cargo rx`."
 documentation = "https://docs.rs/cargo-rx"
+homepage = "https://github.com/rnag/cargo-rx"
 repository = "https://github.com/rnag/cargo-rx"
 readme = "README.md"
-keywords = ["cargo-rx",
-            # some ideas:
-            #   "logging",
-            #   "api",
-            #   "async",
-            ]
+keywords = ["cargo", "subcommand", "cli", "examples", "run-example"]
 categories = [
-    # "api-bindings"
+    "development-tools",
+    "development-tools::cargo-plugins",
 ]
 license = "MIT"
 edition = "2021"
-exclude = [
-    # (optional) list any files we don't want to publish to crates.io
-    # for example, assume the below is a folder which contains large `mp4` files:
-    #   "examples/assets"
-]
+
+[profile.release]
+strip = "symbols"
+
+[[bin]]
+name = "rx"
+path = "src/main.rs"
+
+# See info on command aliases at https://doc.rust-lang.org/cargo/reference/config.html#alias
+
+[alias]
+run-example = "rx"
+rr = "rx --replay"
+rl = "rx --release"
 
 # See here for more info: https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
 
@@ -31,25 +37,40 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# Use cargo-edit (https://github.com/killercup/cargo-edit#installation)
+# to manage dependencies.
+# Running `cargo add DEPENDENCY_NAME` will
+# add the latest version of a dependency to the list,
+# and it will keep the alphabetic ordering for you.
 [dependencies]
+cargo_toml = "0.11.5"
+clap = { version = "3.1.6", features = ["derive"] }
+colored = "2"
+dirs = "4"
+serde = { version = "1.0.*", features = ["derive"] }
+shellwords = "1.1.0"
+toml = "0.5.8"
+
+# Dependencies for Mac/Linux environments
+#
+# Note that Windows needs fzf (https://github.com/junegunn/fzf#installation)
+# to be installed, and available as an `fzf` binary command.
+[target.'cfg(not(target_family="windows"))'.dependencies]
+skim = "0.9.4"
 
 [dev-dependencies]
-# version_sync: to ensure versions in `Cargo.toml` and `README.md` are in sync
-version-sync = "0.9.4"
-# cargo-bump: to bump package version and tag a commit at the same time.
-# actually, the docs recommend installing this globally:
-#   $ cargo install cargo-bump
-# cargo-bump = "1.1.0"
-# logging utilities
-log = "^0.4"
-sensible-env-logger = "0.1.0"
-# tokio: for `async` support
-tokio = { version = "^1.0", features = ["macros", "rt-multi-thread"] }
-# Some useful libraries - uncomment if needed :-)
-# tabled = "0.4.2"
-# indoc = "1.0.4"
-# criterion = "0.3.5"
+clap = { version = "3.*", features = ["derive"] }
+log = "*"
+sensible-env-logger = "0.*"
 
 ### FEATURES #################################################################
 
 [features]
+# note: these are only internal, testing features
+# they are useful when running examples in this project
+feature-1 = []
+feature-2 = []
+
+[[example]]
+name = "logging"
+required-features = ["feature-1", "feature-2"]

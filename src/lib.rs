@@ -10,22 +10,23 @@
 //!
 //! <br>
 //!
-//! A modern Cargo subcommand to easilily run examples
+//! **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a Cargo project.**
+//!
+//! This tool extends [Cargo] to allow you to easily run examples from the command line. It contains `rx` and `cargo rx`.
+//!
+//! [Cargo]: http://doc.crates.io/
 //!
 //! <br>
 //!
 //! ## Usage
 //!
-//! ```no_run
-//! use cargo_rx::*;
+//! Once in a Cargo project with an `examples/` folder, run:
 //!
-//! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     println!("Hello world!");
-//!
-//!     Ok(())
-//! }
+//! ```console
+//! $ rx
 //! ```
+//!
+//! Basically anywhere you would use `cargo run --example` in a Rust project, try `rx` instead.
 //!
 //! ## Examples
 //!
@@ -40,6 +41,30 @@
 //! [crates.io]: https://crates.io/crates/cargo-rx
 //! [`README.md`]: https://github.com/rnag/cargo-rx
 //!
+
+mod cache;
+mod constants;
+mod models;
+mod run_impl;
+mod types;
+
+use cache::*;
+pub use constants::*;
+pub use models::*;
+pub use run_impl::*;
+pub use types::*;
+
+/// Processes an input to *select or run* an **example** in a [Cargo] project.
+///
+/// [Cargo]: http://doc.crates.io/
+pub fn process_input(args: Args) -> Result<()> {
+    let p = Paths::resolve()?;
+
+    let name_to_required_features = p.example_to_required_features()?;
+    let files = p.example_file_paths()?;
+
+    process_input_inner(files, p, args, name_to_required_features)
+}
 
 #[cfg(test)]
 mod tests {
