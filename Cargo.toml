@@ -1,0 +1,55 @@
+[package]
+name = "cargo-rx"
+version = "0.0.1"
+authors = ["Ritvik Nag <rv.kvetch@gmail.com>"]
+description = "A modern Cargo subcommand to easilily run examples"
+documentation = "https://docs.rs/cargo-rx"
+repository = "https://github.com/rnag/cargo-rx"
+readme = "README.md"
+keywords = ["cargo-rx",
+            # some ideas:
+            #   "logging",
+            #   "api",
+            #   "async",
+            ]
+categories = [
+    # "api-bindings"
+]
+license = "MIT"
+edition = "2021"
+exclude = [
+    # (optional) list any files we don't want to publish to crates.io
+    # for example, assume the below is a folder which contains large `mp4` files:
+    #   "examples/assets"
+]
+
+# See here for more info: https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["x86_64-unknown-linux-gnu"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dev-dependencies]
+# version_sync: to ensure versions in `Cargo.toml` and `README.md` are in sync
+version-sync = "0.9.4"
+# cargo-bump: to bump package version and tag a commit at the same time.
+# actually, the docs recommend installing this globally:
+#   $ cargo install cargo-bump
+# cargo-bump = "1.1.0"
+# logging utilities
+log = "^0.4"
+sensible-env-logger = "0.1.0"
+# tokio: for `async` support
+tokio = { version = "^1.0", features = ["macros", "rt-multi-thread"] }
+# Some useful libraries - uncomment if needed :-)
+# tabled = "0.4.2"
+# indoc = "1.0.4"
+# criterion = "0.3.5"
+
+### FEATURES #################################################################
+
+[features]
