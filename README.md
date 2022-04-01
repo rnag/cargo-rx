@@ -19,7 +19,7 @@ Rust project, run `rx` instead.
 ## Getting started
 -->
 
-# Installation
+## Installation
 
 Ensure that you have a fairly recent version of [rust/cargo] installed. Then, run:
 
@@ -33,6 +33,24 @@ $ cargo install cargo-rx
 (Please check [`cargo`'s documentation] to learn how `cargo install` works and how to set up your system so it finds binaries installed by `cargo`.)
 
 [`cargo`'s documentation]: https://doc.rust-lang.org/cargo/
+
+### Windows
+
+Note that on a Windows environment, you will also need to have fzf (https://github.com/junegunn/fzf)
+installed, as the `rx` command will use the `fzf` executable as a *fuzzy* finder instead.
+
+There is currently a [feature request](https://github.com/lotabout/skim/issues/293) open on `skim`
+which proposes adding support for Windows, but this has not been currently implemented yet --
+thus, the `fzf` tool serves as a stand-in alternative for now.
+
+## Features
+
+* Fuzzy finder to sort and search for *examples* in a Cargo project -- when called with just `rx`.
+* Pass arguments after `--` to the selected example.
+* Automatically [enables required-features] when running an example.
+* Play back of most recently run example via `--replay`.
+
+[enables required-features]: https://github.com/rust-lang/cargo/issues/4663
 
 ## Contributing
 
