@@ -63,9 +63,9 @@ version-sync = "^0.9"
 [features]
 # note: these are only internal, testing features
 # they are useful when running examples in this project
-feature-1 = []
-feature-2 = []
+__feature-1 = []
+__feature-2 = []
 
 [[example]]
 name = "logging"
-required-features = ["feature-1", "feature-2"]
+required-features = ["__feature-1", "__feature-2"]
