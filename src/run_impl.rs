@@ -58,19 +58,18 @@ mod inner_impl {
     use std::borrow::Cow;
     use std::collections::HashMap;
     use std::io::Write;
-    use std::path::PathBuf;
-    use std::process::{Command, Output, Stdio};
+    use std::process::{Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        my_files: Vec<PathBuf>,
+        example_files: Vec<ExampleFile>,
         dir: Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let mut cfg: ReplayConfig = Default::default();
-        let fzf: Output;
+        let output: Output;
 
         let examples = if args.replay {
             cfg = get_last_replay()?;
@@ -78,28 +77,37 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let example_names = my_files
+            let example_names = example_files
                 .iter()
-                .map(|f| f.file_stem().unwrap().to_str().unwrap())
+                .map(|f| f.name())
                 .collect::<Vec<_>>()
                 .join("\n");
 
-            let echo = Command::new(ECHO_CMD)
-                .arg(format!("'{example_names}'"))
+            // I was previously testing with the `echo` command -- i.e. the
+            // equivalent of `echo "one\ntwo\nthree" | fzf` -- however this is
+            // not needed anymore, as I realized we can pipe stdin directly;
+            // see below.
+
+            let mut child = Command::new(FZF_CMD)
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()?;
-
-            let piped_input = echo.stdout.unwrap();
-
-            fzf = Command::new(FZF_CMD)
+                // .stderr(Stdio::piped())
                 .arg("-m")
-                .stdin(piped_input)
-                .output()
-                .unwrap_or_else(|e| panic!("failed to execute `{}` process: {}", FZF_CMD, e));
+                .spawn()
+                .expect("Failed to spawn child process");
 
-            std::str::from_utf8(&fzf.stdout)?
+            // pipe stdin in to the `fzf` command
+            let mut stdin = child.stdin.take().expect("Failed to open stdin");
+            std::thread::spawn(move || {
+                stdin
+                    .write_all(example_names.as_bytes())
+                    .expect("Failed to write to stdin");
+            });
+
+            // get the output from running `fzf`
+            output = child.wait_with_output().expect("Failed to read stdout");
+
+            std::str::from_utf8(&output.stdout)?
                 .split_terminator('\n')
                 .map(Cow::Borrowed)
                 .collect()

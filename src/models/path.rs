@@ -19,6 +19,71 @@ pub struct Paths {
     pub cargo_toml_path: PathBuf,
 }
 
+/// Represents the *type* of an example file.
+#[derive(Debug)]
+pub enum ExampleType {
+    /// This represents a "simple" example file, for ex. a `hello_world.rs`
+    /// file in an *examples/* folder.
+    Simple,
+    /// This represents a "main.rs" file nested within a sub-folder in an
+    /// *examples/* folder; the Rust book also calls this a **multi-file**
+    /// example.
+    MultiFile,
+}
+
+/// Represents an *example file* in a Cargo project.
+#[derive(Debug)]
+pub struct ExampleFile {
+    /// Path to example file
+    pub path: PathBuf,
+    /// Type of example file
+    pub path_type: ExampleType,
+}
+
+impl TryFrom<PathBuf> for ExampleFile {
+    type Error = Error;
+
+    fn try_from(mut path: PathBuf) -> StdResult<Self, Self::Error> {
+        let file_type = path.metadata()?.file_type();
+
+        if file_type.is_dir() {
+            path.push("main.rs");
+            if path.is_file() {
+                return Ok(Self {
+                    path,
+                    path_type: ExampleType::MultiFile,
+                });
+            }
+        } else if file_type.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
+            return Ok(Self {
+                path,
+                path_type: ExampleType::Simple,
+            });
+        }
+
+        // TODO
+        Err(Error::new(ErrorKind::InvalidData, "not an example file"))
+    }
+}
+
+impl ExampleFile {
+    /// Returns the *file stem* (i.e. filename without the extension) for an
+    /// example file, or the *folder name* in the case of a `main.rs` example
+    /// within a sub-folder.
+    pub fn name(&self) -> &str {
+        match self.path_type {
+            ExampleType::MultiFile => {
+                let mut comps = self.path.components();
+                // discard the filename (main.rs)
+                let _ = comps.next_back();
+                // return the parent folder name
+                comps.next_back().unwrap().as_os_str().to_str().unwrap()
+            }
+            ExampleType::Simple => self.path.file_stem().unwrap().to_str().unwrap(),
+        }
+    }
+}
+
 impl Paths {
     /// Iterates backward from the current directory, and locates the base
     /// Cargo directory for the project -- which contains at the minimum a
@@ -100,13 +165,14 @@ impl Paths {
     }
 
     /// Returns file paths (`PathBuf` objects) of each *example* file in the Cargo project.
-    pub fn example_file_paths(&self) -> Result<Vec<PathBuf>> {
+    pub fn example_file_paths(&self) -> Result<Vec<ExampleFile>> {
         let mut files = Vec::new();
+
         for entry in fs::read_dir(&self.examples_path)?.filter_map(StdResult::ok) {
             let path: PathBuf = entry.path();
 
-            if path.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
-                files.push(path);
+            if let Ok(f) = ExampleFile::try_from(path) {
+                files.push(f);
             }
         }
 

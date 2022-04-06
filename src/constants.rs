@@ -21,7 +21,5 @@ pub const SETTINGS_TOML: &str = "settings.toml";
 
 /// The `cargo` command
 pub const CARGO_CMD: &str = "cargo";
-/// The `echo` command, present in both Linux/Windows environments
-pub const ECHO_CMD: &str = "echo";
 /// The `fzf` (fuzzy finder) command
 pub const FZF_CMD: &str = "fzf";
