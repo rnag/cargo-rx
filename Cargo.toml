@@ -40,6 +40,7 @@ cargo_toml = "0.11.5"
 clap = { version = "3.1.6", features = ["derive"] }
 colored = "2"
 home = "0.5.3"
+path-absolutize = "3.0.12"
 serde = { version = "1.0.136", features = ["derive"] }
 shellwords = "1.1.0"
 toml = "0.5.8"
@@ -69,3 +70,15 @@ feature-2 = []
 [[example]]
 name = "logging"
 required-features = ["feature-1", "feature-2"]
+
+[[example]]
+name = "path-1"
+path = "examples\\custom_path\\one.rs"
+
+[[example]]
+name = "path-2"
+path = "examples/custom_path/two.rs"
+
+[[example]]
+name = "hello_world"
+path = "./examples/hey_world.rs"

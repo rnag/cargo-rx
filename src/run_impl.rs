@@ -56,13 +56,13 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::io::Write;
     use std::process::{Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_files: Vec<ExampleFile>,
+        example_files: HashSet<ExampleFile>,
         dir: Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
