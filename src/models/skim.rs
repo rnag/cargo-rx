@@ -6,6 +6,7 @@ mod skim_impl {}
 #[cfg(not(target_family = "windows"))]
 mod skim_impl {
     use std::borrow::Cow;
+    use std::fmt::Display;
     use std::fs;
     use std::path::PathBuf;
 
@@ -27,18 +28,10 @@ mod skim_impl {
 
         fn preview(&self, _context: PreviewContext<'_>) -> ItemPreview {
             let file_contents = match fs::read_to_string(&self.file_path) {
-                Ok(c) => c,
+                Ok(contents) => contents,
                 // We ran into an error reading the file; usually, this
                 // happens when the file doesn't exist.
-                Err(e) => {
-                    return ItemPreview::AnsiText(
-                        format!("\n{}: {}", "error".bold(), e)
-                            .as_str()
-                            .red()
-                            .on_white()
-                            .to_string(),
-                    )
-                }
+                Err(e) => return ItemPreview::AnsiText(format_err(e)),
             };
 
             let lines = file_contents
@@ -60,5 +53,13 @@ mod skim_impl {
 
             ItemPreview::AnsiText(format!("\n{}", lines))
         }
+    }
+
+    fn format_err<E: Display>(e: E) -> String {
+        format!("\n{}: {}", "error".bold(), e)
+            .as_str()
+            .red()
+            .on_white()
+            .to_string()
     }
 }
