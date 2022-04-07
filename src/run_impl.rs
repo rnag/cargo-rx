@@ -125,9 +125,9 @@ mod inner_impl {
                 extra_args.push(arg);
             }
             extra_args
-        } else if args.prompt_args {
+        } else if args.input_args {
             // Print label for input
-            print!("Arguments: ");
+            print!("{} ", "Arguments:".bright_cyan());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();
@@ -240,9 +240,9 @@ mod inner_impl {
                 extra_args.push(arg);
             }
             extra_args
-        } else if args.prompt_args {
+        } else if args.input_args {
             // Print label for input
-            print!("Arguments: ");
+            print!("{} ", "Arguments:".bright_cyan());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();

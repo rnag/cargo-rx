@@ -12,8 +12,11 @@ fn main() {
     process_input(Args {
         name: Some("hello_world".into()),
         args: Vec::from(args.map(String::from)),
-        prompt_args: false,
-        verbose: true,
+        input_args: false,
+        cargo: cargo_options::CommonOptions {
+            verbose: 1,
+            ..Default::default()
+        },
         ..Default::default()
     })
     .unwrap();
