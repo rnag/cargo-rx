@@ -74,7 +74,7 @@ required-features = ["feature-1", "feature-2"]
 
 [[example]]
 name = "path-1"
-path = "examples\\custom_path\\one.rs"
+path = "examples/custom_path/one.rs"
 
 [[example]]
 name = "path-2"

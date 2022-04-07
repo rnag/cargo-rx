@@ -6,7 +6,6 @@ mod skim_impl {}
 #[cfg(not(target_family = "windows"))]
 mod skim_impl {
     use std::borrow::Cow;
-    use std::ffi::OsString;
     use std::fs;
     use std::path::PathBuf;
 
@@ -18,16 +17,29 @@ mod skim_impl {
         /// Absolute file path to the *example*
         pub file_path: PathBuf,
         /// Filename of the *example*, excluding the file extension
-        pub file_stem: OsString,
+        pub file_stem: String,
     }
 
     impl SkimItem for ExampleFileItem {
         fn text(&self) -> Cow<'_, str> {
-            self.file_stem.to_string_lossy()
+            Cow::Borrowed(&self.file_stem)
         }
 
         fn preview(&self, _context: PreviewContext<'_>) -> ItemPreview {
-            let file_contents = fs::read_to_string(&self.file_path).unwrap();
+            let file_contents = match fs::read_to_string(&self.file_path) {
+                Ok(c) => c,
+                // We ran into an error reading the file; usually, this
+                // happens when the file doesn't exist.
+                Err(e) => {
+                    return ItemPreview::AnsiText(
+                        format!("\n{}: {}", "error".bold(), e)
+                            .as_str()
+                            .red()
+                            .on_white()
+                            .to_string(),
+                    )
+                }
+            };
 
             let lines = file_contents
                 .lines()

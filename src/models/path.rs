@@ -1,5 +1,6 @@
 use crate::*;
 
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
@@ -35,16 +36,32 @@ pub enum ExampleType {
     /// example.
     MultiFile,
     /// Custom name
-    Custom(String),
+    Custom,
 }
 
 /// Represents an *example file* in a Cargo project.
 #[derive(Debug, Eq)]
 pub struct ExampleFile {
+    /// The *file stem* (i.e. filename without the extension) for an
+    /// example file, or the *folder name* in the case of a `main.rs`
+    /// example within a sub-folder.
+    pub name: String,
     /// Path to example file
     pub path: PathBuf,
     /// Type of example file
     pub path_type: ExampleType,
+}
+
+impl Ord for ExampleFile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.name.cmp(&other.name)
+    }
+}
+
+impl PartialOrd for ExampleFile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl PartialEq<Self> for ExampleFile {
@@ -74,13 +91,29 @@ impl TryFrom<PathBuf> for ExampleFile {
         if file_type.is_dir() {
             path.push("main.rs");
             if path.is_file() {
+                let mut comps = path.components();
+                // discard the filename (main.rs)
+                let _ = comps.next_back();
+                // return the parent folder name
+                let name = comps
+                    .next_back()
+                    .unwrap()
+                    .as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+
                 return Ok(Self {
+                    name,
                     path,
                     path_type: ExampleType::MultiFile,
                 });
             }
         } else if file_type.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
+            let name = path.file_stem().unwrap().to_str().unwrap().to_owned();
+
             return Ok(Self {
+                name,
                 path,
                 path_type: ExampleType::Simple,
             });
@@ -103,27 +136,12 @@ impl ExampleFile {
     ///            and contain characters such as `.` and `..` for instance.
     pub fn from_name_and_path<P: AsRef<Path>>(root: &Path, name: String, path: P) -> Self {
         let abs_path = path.as_ref().absolutize_from(root).unwrap();
+        let path = PathBuf::from(abs_path);
 
         Self {
-            path: PathBuf::from(abs_path),
-            path_type: ExampleType::Custom(name),
-        }
-    }
-
-    /// Returns the *file stem* (i.e. filename without the extension) for an
-    /// example file, or the *folder name* in the case of a `main.rs` example
-    /// within a sub-folder.
-    pub fn name(&self) -> &str {
-        match self.path_type {
-            ExampleType::MultiFile => {
-                let mut comps = self.path.components();
-                // discard the filename (main.rs)
-                let _ = comps.next_back();
-                // return the parent folder name
-                comps.next_back().unwrap().as_os_str().to_str().unwrap()
-            }
-            ExampleType::Simple => self.path.file_stem().unwrap().to_str().unwrap(),
-            ExampleType::Custom(ref name) => name,
+            name,
+            path,
+            path_type: ExampleType::Custom,
         }
     }
 }
@@ -226,6 +244,14 @@ impl Paths {
         for example in manifest.example.iter() {
             if let Some(ref path) = example.path {
                 if let Some(ref name) = example.name {
+                    // I debated whether to add this for Mac/Linux, however it
+                    // seems like `cargo run --example` doesn't support
+                    // backslashes (\) in `example.path` in Cargo.toml either,
+                    // so it's likely not worth the effort in this case.
+
+                    // #[cfg(not(target_family = "windows"))]
+                    // let path = path.replace('\\', "/");
+
                     let f = ExampleFile::from_name_and_path(root, name.to_owned(), path);
                     files.insert(f);
                 }

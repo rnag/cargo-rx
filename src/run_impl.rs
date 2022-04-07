@@ -77,7 +77,9 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name()).collect();
+            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name).collect();
+
+            // Sort A -> Z, using the names of example files
             example_names.sort_unstable();
 
             let example_names = example_names.join("\n");
@@ -169,16 +171,15 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::io::Write;
-    use std::path::PathBuf;
     use std::sync::Arc;
 
     use skim::prelude::*;
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        my_files: Vec<PathBuf>,
+        example_files: HashSet<ExampleFile>,
         dir: Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
@@ -193,6 +194,11 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
+            let mut example_files: Vec<_> = Vec::from_iter(example_files);
+
+            // Sort A -> Z, using the names of example files
+            example_files.sort_unstable();
+
             let options = SkimOptionsBuilder::default()
                 // .height(Some("50%"))
                 .preview_window(Some("right:70%"))
@@ -203,10 +209,10 @@ mod inner_impl {
 
             let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-            for ex_file in my_files.into_iter() {
+            for ex_file in example_files.into_iter() {
                 let _ = tx_item.send(Arc::new(ExampleFileItem {
-                    file_stem: ex_file.file_stem().unwrap().to_os_string(),
-                    file_path: ex_file,
+                    file_stem: ex_file.name,
+                    file_path: ex_file.path,
                 }));
             }
             drop(tx_item); // so that skim could know when to stop waiting for more items.
