@@ -201,12 +201,13 @@ impl Paths {
     pub fn example_to_required_features(&self) -> Result<HashMap<String, String>> {
         let mut name_to_required_features: HashMap<String, String> =
             HashMap::with_capacity(self.manifest.example.len());
-        let manifest = self.manifest.clone();
+        let manifest = &self.manifest;
 
-        for example in manifest.example {
+        for example in manifest.example.iter() {
             match example.name {
-                Some(name) if !example.required_features.is_empty() => {
-                    name_to_required_features.insert(name, example.required_features.join(" "));
+                Some(ref name) if !example.required_features.is_empty() => {
+                    name_to_required_features
+                        .insert(name.clone(), example.required_features.join(" "));
                 }
                 _ => (),
             };
@@ -222,9 +223,9 @@ impl Paths {
         let manifest = &self.manifest;
         let root = &self.root_path;
 
-        for example in &manifest.example {
-            if let Some(path) = &example.path {
-                if let Some(name) = &example.name {
+        for example in manifest.example.iter() {
+            if let Some(ref path) = example.path {
+                if let Some(ref name) = example.name {
                     let f = ExampleFile::from_name_and_path(root, name.to_owned(), path);
                     files.insert(f);
                 }
