@@ -77,11 +77,10 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let example_names = example_files
-                .iter()
-                .map(|f| f.name())
-                .collect::<Vec<_>>()
-                .join("\n");
+            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name()).collect();
+            example_names.sort_unstable();
+
+            let example_names = example_names.join("\n");
 
             // I was previously testing with the `echo` command -- i.e. the
             // equivalent of `echo "one\ntwo\nthree" | fzf` -- however this is
