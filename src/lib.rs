@@ -10,7 +10,8 @@
 //!
 //! > **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a Cargo project.**
 //!
-//! This tool extends [Cargo] to allow you to easily run examples from the command line.
+//! This tool extends [Cargo] to allow you to easily search and run examples
+//! from the command line.
 //! It provides a single executable: `rx`.
 //!
 //! [Cargo]: http://doc.crates.io/
