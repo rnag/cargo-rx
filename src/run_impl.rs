@@ -18,22 +18,22 @@ pub fn cargo_run_example<'a, T: IntoIterator>(
 where
     <T as IntoIterator>::Item: AsRef<OsStr>,
 {
-    let mut cmd = Command::new(CARGO_CMD);
+    let mut run = Command::new(CARGO_CMD);
 
-    cmd.current_dir(root_path)
+    run.current_dir(root_path)
         .arg("run")
         .arg("--example")
         .arg(name);
 
     if let Some(feat) = required_features {
-        cmd.arg("--features");
-        cmd.arg(feat);
+        run.arg("--features");
+        run.arg(feat);
     };
 
-    cmd.args(args);
+    run.args(args);
 
     // TODO: maybe it would be a better idea to use something like `shellwords::join()`
-    let cmd_args = cmd
+    let cargo_run_args = run
         .get_args()
         .map(OsStr::display_string)
         .collect::<Vec<_>>()
@@ -44,7 +44,7 @@ where
         " {} {} {}",
         ">>".white().bold(),
         CARGO_CMD.bright_blue().italic(),
-        cmd_args.as_str().bright_blue().italic()
+        cargo_run_args.as_str().bright_blue().italic()
     );
 
     #[cfg(not(target_family = "windows"))]
@@ -52,10 +52,10 @@ where
         " {} {} {}",
         "❯❯".white().bold(),
         CARGO_CMD.blue().italic(),
-        cmd_args.as_str().blue().italic()
+        cargo_run_args.as_str().blue().italic()
     );
 
-    cmd.spawn()?.wait()?;
+    run.spawn()?.wait()?;
 
     Ok(())
 }
