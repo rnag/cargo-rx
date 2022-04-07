@@ -1,5 +1,6 @@
 use crate::*;
 
+use std::ffi::OsStr;
 use std::path::Path;
 use std::process::Command;
 
@@ -8,30 +9,42 @@ use colored::Colorize;
 pub(crate) use inner_impl::*;
 
 /// Call `cargo run --example` on an example `name`
-pub fn cargo_run_example<'a, 'b, T: IntoIterator>(
+pub fn cargo_run_example<'a, T: IntoIterator>(
     root_path: &'a Path,
     name: &'a str,
     args: T,
     required_features: Option<&'a String>,
 ) -> Result<()>
 where
-    Vec<&'a str>: Extend<<T as IntoIterator>::Item>,
+    <T as IntoIterator>::Item: AsRef<OsStr>,
 {
-    let mut base_args = vec!["run", "--example", name];
+    let mut cmd = Command::new(CARGO_CMD);
+
+    cmd.current_dir(root_path)
+        .arg("run")
+        .arg("--example")
+        .arg(name);
 
     if let Some(feat) = required_features {
-        base_args.push("--features");
-        base_args.push(feat);
+        cmd.arg("--features");
+        cmd.arg(feat);
     };
 
-    base_args.extend(args);
+    cmd.args(args);
+
+    // TODO: maybe it would be a better idea to use something like `shellwords::join()`
+    let cmd_args = cmd
+        .get_args()
+        .map(OsStr::display_string)
+        .collect::<Vec<_>>()
+        .join(" ");
 
     #[cfg(target_family = "windows")]
     println!(
         " {} {} {}",
         ">>".white().bold(),
         CARGO_CMD.bright_blue().italic(),
-        base_args.join(" ").as_str().bright_blue().italic()
+        cmd_args.as_str().bright_blue().italic()
     );
 
     #[cfg(not(target_family = "windows"))]
@@ -39,14 +52,10 @@ where
         " {} {} {}",
         "❯❯".white().bold(),
         CARGO_CMD.blue().italic(),
-        base_args.join(" ").as_str().blue().italic()
+        cmd_args.as_str().blue().italic()
     );
 
-    let _res = Command::new(CARGO_CMD)
-        .args(base_args)
-        .current_dir(root_path)
-        .spawn()?
-        .wait()?;
+    cmd.spawn()?.wait()?;
 
     Ok(())
 }

@@ -74,12 +74,14 @@
 mod cache;
 mod constants;
 mod models;
+mod osstringext;
 mod run_impl;
 mod types;
 
 use cache::*;
 pub use constants::*;
 pub use models::*;
+pub use osstringext::*;
 pub use run_impl::*;
 pub use types::*;
 
