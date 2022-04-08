@@ -23,3 +23,12 @@ pub const SETTINGS_TOML: &str = "settings.toml";
 pub const CARGO_CMD: &str = "cargo";
 /// The `fzf` (fuzzy finder) command
 pub const FZF_CMD: &str = "fzf";
+
+/// Newline character as bytes
+pub const NL: &u8 = &b'\n';
+
+/// Space character as bytes
+pub const SPACE: &u8 = &b' ';
+
+#[cfg(any(target_os = "windows", target_arch = "wasm32"))]
+pub(crate) const INVALID_UTF8: &str = "unexpected invalid UTF-8 code point";
