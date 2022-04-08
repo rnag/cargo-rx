@@ -19,7 +19,7 @@ pub struct Args {
     #[clap(short = 'R', long)]
     pub replay: bool,
 
-    /// True to prompt for arguments to example script
+    /// True to prompt for arguments to the selected example script
     #[clap(short, long, short_alias = 'p', alias = "prompt-args")]
     pub input_args: bool,
 

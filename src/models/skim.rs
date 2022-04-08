@@ -17,6 +17,7 @@ mod skim_impl {
     pub struct ExampleFileItem {
         /// Absolute file path to the *example*
         pub file_path: PathBuf,
+
         /// Filename of the *example*, excluding the file extension
         pub file_stem: String,
     }

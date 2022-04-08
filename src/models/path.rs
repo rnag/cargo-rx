@@ -17,10 +17,13 @@ use path_absolutize::*;
 pub struct Paths {
     /// *Base path* to a Cargo project directory
     pub root_path: PathBuf,
+
     /// Path to the *examples* in a Cargo project
     pub examples_path: PathBuf,
+
     /// Path to the *Cargo.toml* file
     pub cargo_toml_path: PathBuf,
+
     /// Parsed contents of the *Cargo.toml* manifest file
     pub manifest: Manifest,
 }
@@ -28,14 +31,17 @@ pub struct Paths {
 /// Represents the *type* of an example file.
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum ExampleType {
-    /// This represents a "simple" example file, for ex. a `hello_world.rs`
-    /// file in an *examples/* folder.
+    /// This represents a *simple* example file, for ex. a `hello_world.rs`
+    /// file in an `examples/` folder.
     Simple,
-    /// This represents a "main.rs" file nested within a sub-folder in an
-    /// *examples/* folder; the Rust book also calls this a **multi-file**
+
+    /// This represents a `main.rs` file nested within a sub-folder in an
+    /// `examples/` folder; the Rust book also calls this a **multi-file**
     /// example.
     MultiFile,
-    /// Custom name
+
+    /// This represents an example file with a *custom path* defined in the
+    /// `Cargo.toml` file of a Cargo project.
     Custom,
 }
 
@@ -46,11 +52,15 @@ pub struct ExampleFile {
     /// example file, or the *folder name* in the case of a `main.rs`
     /// example within a sub-folder.
     pub name: String,
+
     /// Path to example file
     pub path: PathBuf,
+
     /// Type of example file
     pub path_type: ExampleType,
 }
+
+/// *order* a sequence of `ExampleFile`s by the `name` field.
 
 impl Ord for ExampleFile {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -63,6 +73,8 @@ impl PartialOrd for ExampleFile {
         Some(self.cmp(other))
     }
 }
+
+/// Determine *equality* and *hash* using the `path` field.
 
 impl PartialEq<Self> for ExampleFile {
     fn eq(&self, other: &Self) -> bool {
@@ -85,6 +97,7 @@ impl PartialEq<PathBuf> for ExampleFile {
 impl TryFrom<PathBuf> for ExampleFile {
     type Error = Error;
 
+    /// Try to create an `ExampleFile` from a `PathBuf` object.
     fn try_from(mut path: PathBuf) -> StdResult<Self, Self::Error> {
         let file_type = path.metadata()?.file_type();
 
