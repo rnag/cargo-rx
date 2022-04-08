@@ -52,12 +52,12 @@ impl OsStrExt2 for OsStr {
     ///     bytes data to a *&str* directly, and return an owned *String*.
     ///
     fn display_string(&self) -> String {
-        let mut has_nl = false;
+        let mut has_newline = false;
         let mut has_space = false;
 
         for b in self.as_bytes() {
             if b == NL {
-                has_nl = true;
+                has_newline = true;
                 break;
             }
             if b == SPACE {
@@ -65,7 +65,7 @@ impl OsStrExt2 for OsStr {
             }
         }
 
-        if has_nl {
+        if has_newline {
             shellwords::escape(self.to_str().unwrap())
         } else if has_space {
             format!("{self:#?}")
