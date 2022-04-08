@@ -34,13 +34,22 @@ $ cargo install cargo-rx
 
 ### Windows
 
-Note that on a Windows environment, you will also need to have [fzf installed], as the `rx` command will use the `fzf` executable as a *fuzzy finder* instead.
+Note that on a *Windows* environment, you will also need to have [fzf installed]
+installed and available in your *$PATH* variable.
 
-There is currently a [feature request](https://github.com/lotabout/skim/issues/293) open on `skim`
-which proposes adding support for Windows, but this has not been currently implemented yet --
+An easy way to install `fzf` is via [Chocolatey]:
+
+```console
+choco install fzf
+```
+
+There is currently a [feature request] open on `skim` which proposes adding
+support for Windows, but this has not been currently implemented yet --
 thus, the `fzf` tool serves as a stand-in alternative for now.
 
 [fzf installed]: https://github.com/junegunn/fzf#windows
+[Chocolatey]: https://chocolatey.org/packages/fzf
+[feature request]: https://github.com/lotabout/skim/issues/293
 
 ## Features
 
