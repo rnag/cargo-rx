@@ -4,6 +4,7 @@ use std::ffi::OsStr;
 use std::path::Path;
 use std::process::Command;
 
+use cargo_options::CommonOptions;
 use colored::Colorize;
 
 pub(crate) use inner_impl::*;
@@ -12,6 +13,7 @@ pub(crate) use inner_impl::*;
 pub fn cargo_run_example<'a, T: IntoIterator>(
     root_path: &'a Path,
     name: &'a str,
+    opts: &'a CommonOptions,
     args: T,
     required_features: Option<&'a String>,
 ) -> Result<()>
@@ -25,10 +27,103 @@ where
         .arg("--example")
         .arg(name);
 
-    if let Some(feat) = required_features {
+    if opts.quiet {
+        run.arg("--quiet");
+    }
+
+    if let Some(jobs) = opts.jobs {
+        run.arg("--jobs").arg(jobs.to_string());
+    }
+
+    if opts.release {
+        run.arg("--release");
+    }
+
+    if let Some(ref profile) = opts.profile {
+        run.arg("--profile").arg(profile);
+    }
+
+    if opts.all_features {
+        run.arg("--all-features");
+    } else if let Some(feats) = required_features {
         run.arg("--features");
-        run.arg(feat);
-    };
+        if opts.features.is_empty() {
+            run.arg(feats);
+        } else {
+            let other_feats = &opts.features.join(" ");
+
+            let mut enabled_feats = String::with_capacity(feats.len() + other_feats.len() + 1);
+            enabled_feats.push_str(feats);
+            enabled_feats.push(' ');
+            enabled_feats.push_str(other_feats);
+
+            run.arg(enabled_feats);
+        };
+    } else if !opts.features.is_empty() {
+        let feats = opts.features.join(" ");
+        run.arg("--features").arg(feats);
+    }
+
+    if opts.no_default_features {
+        run.arg("--no-default-features");
+    }
+
+    if !opts.target.is_empty() {
+        run.arg("--target").arg(opts.target.join(" "));
+    }
+
+    if let Some(ref target_dir) = opts.target_dir {
+        run.arg("--target-dir").arg(target_dir);
+    }
+
+    if let Some(ref manifest_path) = opts.manifest_path {
+        run.arg("--manifest-path").arg(manifest_path);
+    }
+
+    if !opts.message_format.is_empty() {
+        run.arg("--message-format")
+            .arg(opts.message_format.join(" "));
+    }
+
+    if opts.unit_graph {
+        run.arg("--unit-graph");
+    }
+
+    if opts.ignore_rust_version {
+        run.arg("--ignore-rust-version");
+    }
+
+    if opts.verbose != 0 {
+        let mut verbose = String::with_capacity(opts.verbose + 1);
+        verbose.push('-');
+        verbose.push_str(&"v".repeat(opts.verbose));
+
+        run.arg(verbose);
+    }
+
+    if let Some(ref when) = opts.color {
+        run.arg("--color").arg(when);
+    }
+
+    if opts.frozen {
+        run.arg("--frozen");
+    }
+
+    if opts.locked {
+        run.arg("--locked");
+    }
+
+    if opts.offline {
+        run.arg("--offline");
+    }
+
+    if !opts.config.is_empty() {
+        run.arg("--config").arg(opts.config.join(" "));
+    }
+
+    if !opts.unstable_flags.is_empty() {
+        run.arg("-Z").arg(opts.unstable_flags.join(" "));
+    }
 
     run.args(args);
 
@@ -155,10 +250,14 @@ mod inner_impl {
             Vec::default()
         };
 
+        let example_args_ref = &example_args;
+        let opts_ref = &args.cargo;
+        let root_ref = &dir.root_path;
+
         // Save info on the example we're running, so we can `--replay` it if needed
         match examples.first() {
             Some(name) if !args.replay => {
-                save_last_replay(name, &example_args)?;
+                save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
@@ -168,7 +267,7 @@ mod inner_impl {
             let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
-            cargo_run_example(&dir.root_path, name, &example_args, req_features)?;
+            cargo_run_example(root_ref, name, opts_ref, example_args_ref, req_features)?;
         }
 
         Ok(())
@@ -274,10 +373,14 @@ mod inner_impl {
             Vec::default()
         };
 
+        let example_args_ref = &example_args;
+        let opts_ref = &args.cargo;
+        let root_ref = &dir.root_path;
+
         // Save info on the example we're running, so we can `--replay` it if needed
         match examples.first() {
             Some(name) if !args.replay => {
-                save_last_replay(name, &example_args)?;
+                save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
@@ -287,7 +390,7 @@ mod inner_impl {
             let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
-            cargo_run_example(&dir.root_path, name, &example_args, req_features)?;
+            cargo_run_example(root_ref, name, opts_ref, example_args_ref, req_features)?;
         }
 
         Ok(())
