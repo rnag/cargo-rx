@@ -9,7 +9,7 @@ use std::ffi::OsStr;
 
 #[cfg(not(any(target_os = "windows", target_arch = "wasm32")))]
 mod ext_impl {
-    use std::os::unix::ffi::OsStrExt;
+    pub(crate) use std::os::unix::ffi::OsStrExt;
 }
 
 #[cfg(any(target_os = "windows", target_arch = "wasm32"))]
@@ -50,8 +50,9 @@ impl OsStrExt2 for OsStr {
     ///
     /// Here we treat the `OsStr` as a command-line argument, so the current
     /// implementation is as follows:
-    ///   - if the argument contains any *newlines*, we defer the formatting
-    ///     to `shellwords::escape` instead.
+    ///   - if the argument contains any *newlines*, we replace any raw `\n`
+    ///     characters with *newlines*, since the debug representation of
+    ///     `OsStr` doesn't seem to carry them over.
     ///   - if the argument contains any *spaces*, we call the *debug*
     ///     representation of `OsStr`, which returns the display value wrapped
     ///     in quotes.
@@ -72,13 +73,17 @@ impl OsStrExt2 for OsStr {
             }
         }
 
-        #[cfg(not(target_family = "windows"))]
-        #[inline]
-        fn escape_with_newlines(input: &OsStr) -> String {
-            shellwords::escape(input.to_str().unwrap())
-        }
+        // From personal testing, the implementation with `shellwords::escape()`
+        // appears to be about **40x slower** in general, than just using the
+        // debug representation of `OsStr`. However, I agree it would be nice
+        // to use `shellwords` - at least on Mac/Linux environments.
+        //
+        // #[cfg(not(target_family = "windows"))]
+        // #[inline]
+        // fn escape_with_newlines(input: &OsStr) -> String {
+        //     shellwords::escape(input.to_str().unwrap())
+        // }
 
-        #[cfg(target_family = "windows")]
         #[inline]
         fn escape_with_newlines(input: &OsStr) -> String {
             format!("{input:?}").replace(r"\n", "\n")
