@@ -16,7 +16,7 @@ pub trait RunExampleExt {
     /// * `root_path` - the base path to the Cargo directory with a
     ///                 `Cargo.toml` file.
     /// * `name` - the name of the Cargo example to run.
-    /// * `args` - additional arguments to pass to `cargo run --example`.
+    /// * `args` - arguments to pass to the example script.
     /// * `required_features` - any required features to enable when running
     ///                         the example.
     fn run_example<'a, T: IntoIterator>(
