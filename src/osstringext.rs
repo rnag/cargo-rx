@@ -92,7 +92,7 @@ impl OsStrExt2 for OsStr {
         if has_newline {
             escape_with_newlines(self)
         } else if has_space {
-            format!("{self:#?}")
+            format!("{self:?}")
         } else {
             self.to_str().unwrap().to_owned()
         }
