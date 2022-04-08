@@ -2,23 +2,30 @@
 //!
 //! [osstringext.rs]: https://github.com/clap-rs/clap/blob/d51ae89656fda527ef1bccf53fca0ad78ecb8c29/src/osstringext.rs
 //!
-#[cfg(any(target_os = "windows", target_arch = "wasm32"))]
-use crate::INVALID_UTF8;
 use crate::{NL, SPACE};
+pub(crate) use ext_impl::*;
 
 use std::ffi::OsStr;
-#[cfg(not(any(target_os = "windows", target_arch = "wasm32")))]
-use std::os::unix::ffi::OsStrExt;
 
-#[cfg(any(target_os = "windows", target_arch = "wasm32"))]
-pub trait OsStrExt3 {
-    fn as_bytes(&self) -> &[u8];
+#[cfg(not(any(target_os = "windows", target_arch = "wasm32")))]
+mod ext_impl {
+    use std::os::unix::ffi::OsStrExt;
 }
 
 #[cfg(any(target_os = "windows", target_arch = "wasm32"))]
-impl OsStrExt3 for OsStr {
-    fn as_bytes(&self) -> &[u8] {
-        self.to_str().map(|s| s.as_bytes()).expect(INVALID_UTF8)
+mod ext_impl {
+    use super::*;
+    use crate::INVALID_UTF8;
+
+    #[doc(hidden)]
+    pub trait OsStrExt3 {
+        fn as_bytes(&self) -> &[u8];
+    }
+
+    impl OsStrExt3 for OsStr {
+        fn as_bytes(&self) -> &[u8] {
+            self.to_str().map(|s| s.as_bytes()).expect(INVALID_UTF8)
+        }
     }
 }
 
@@ -65,8 +72,20 @@ impl OsStrExt2 for OsStr {
             }
         }
 
+        #[cfg(not(target_family = "windows"))]
+        #[inline]
+        fn escape_with_newlines(input: &OsStr) -> String {
+            shellwords::escape(input.to_str().unwrap())
+        }
+
+        #[cfg(target_family = "windows")]
+        #[inline]
+        fn escape_with_newlines(input: &OsStr) -> String {
+            format!("{input:?}").replace(r"\n", "\n")
+        }
+
         if has_newline {
-            shellwords::escape(self.to_str().unwrap())
+            escape_with_newlines(self)
         } else if has_space {
             format!("{self:#?}")
         } else {

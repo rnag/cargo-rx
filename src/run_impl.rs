@@ -86,7 +86,7 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name).collect();
+            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name.as_str()).collect();
 
             // Sort A -> Z, using the names of example files
             example_names.sort_unstable();
