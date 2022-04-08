@@ -30,6 +30,12 @@ pub trait RunExampleExt {
         <T as IntoIterator>::Item: AsRef<OsStr>;
 }
 
+/// Add `run --example <name>` as arguments to Command `cmd`
+#[inline]
+fn add_run_example(cmd: &mut Command, name: &str) {
+    cmd.arg("run").arg("--example").arg(name);
+}
+
 impl RunExampleExt for CommonOptions {
     fn run_example<'a, T: IntoIterator>(
         &self,
@@ -42,11 +48,24 @@ impl RunExampleExt for CommonOptions {
         <T as IntoIterator>::Item: AsRef<OsStr>,
     {
         let mut run = Command::new(CARGO_CMD);
+        run.current_dir(root_path);
 
-        run.current_dir(root_path)
-            .arg("run")
-            .arg("--example")
-            .arg(name);
+        // Check for unstable flags and options to `cargo run`
+
+        let has_config = !self.config.is_empty();
+        let has_unstable_flags = !self.unstable_flags.is_empty();
+
+        let has_unstable_opts = has_config || has_unstable_flags || self.unit_graph;
+
+        if !has_unstable_opts {
+            add_run_example(&mut run, name);
+        } else {
+            // enable the `+nightly` toolchain
+            run.arg("+nightly");
+            add_run_example(&mut run, name);
+            // enable the `unstable-options`
+            run.arg("-Z").arg("unstable-options");
+        }
 
         if self.quiet {
             run.arg("--quiet");
@@ -90,7 +109,9 @@ impl RunExampleExt for CommonOptions {
         }
 
         if !self.target.is_empty() {
-            run.arg("--target").arg(self.target.join(" "));
+            for target in self.target.iter() {
+                run.arg("--target").arg(target);
+            }
         }
 
         if let Some(ref target_dir) = self.target_dir {
@@ -102,8 +123,9 @@ impl RunExampleExt for CommonOptions {
         }
 
         if !self.message_format.is_empty() {
-            run.arg("--message-format")
-                .arg(self.message_format.join(" "));
+            for fmt in self.message_format.iter() {
+                run.arg("--message-format").arg(fmt);
+            }
         }
 
         if self.unit_graph {
@@ -138,12 +160,16 @@ impl RunExampleExt for CommonOptions {
             run.arg("--offline");
         }
 
-        if !self.config.is_empty() {
-            run.arg("--config").arg(self.config.join(" "));
+        if has_config {
+            for cfg in self.config.iter() {
+                run.arg("--config").arg(cfg);
+            }
         }
 
-        if !self.unstable_flags.is_empty() {
-            run.arg("-Z").arg(self.unstable_flags.join(" "));
+        if has_unstable_flags {
+            for flag in self.unstable_flags.iter() {
+                run.arg("-Z").arg(flag);
+            }
         }
 
         run.args(args);
