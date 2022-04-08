@@ -80,7 +80,7 @@ mod inner_impl {
             extra_args
         } else if args.input_args {
             // Print label for input
-            print!("{} ", "Arguments:".bright_cyan());
+            print!("{} ", "Arguments:".cyan().bold());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();
@@ -203,7 +203,7 @@ mod inner_impl {
             extra_args
         } else if args.input_args {
             // Print label for input
-            print!("{} ", "Arguments:".bright_cyan());
+            print!("{} ", "Arguments:".cyan().bold());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();
