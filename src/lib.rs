@@ -39,7 +39,7 @@
 //! ### Windows
 //!
 //! Note that on a *Windows* environment, you will also need to have [fzf installed]
-//! installed and available in your *$PATH* variable.
+//! and available in your *$PATH* variable.
 //!
 //! An easy way to install `fzf` is via [Chocolatey]:
 //!
