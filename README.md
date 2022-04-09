@@ -21,6 +21,12 @@ Rust project, try `rx` instead.
 
 ## Installation
 
+### From binaries
+
+Check out the [Releases page] for prebuilt binaries for various architectures.
+    
+### From *crates.io*
+
 Ensure that you have a fairly recent version of [rust/cargo] installed. Then, run:
 
 [rust/cargo]: https://doc.rust-lang.org/cargo/getting-started/installation.html
@@ -29,6 +35,8 @@ $ cargo install cargo-rx
 ```
 
 *Compiler support: requires rustc 1.58+*
+
+[Releases page]: https://github.com/rnag/cargo-rx/releases
 
 [`cargo`'s documentation]: https://doc.rust-lang.org/cargo/
 
