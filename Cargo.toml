@@ -1,8 +1,8 @@
 [package]
 name = "cargo-rx"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ritvik Nag <rv.kvetch@gmail.com>"]
-description = "A simple, modern example runner that extends Cargo to allow you to easily run examples from the command line. It comes with the `rx` command."
+description = "A simple fuzzy finder that allows you to search and run examples from the command line. It comes with the `rx` command."
 documentation = "https://docs.rs/cargo-rx"
 homepage = "https://github.com/rnag/cargo-rx"
 repository = "https://github.com/rnag/cargo-rx"
@@ -63,9 +63,9 @@ version-sync = "^0.9"
 [features]
 # note: these are only internal, testing features
 # they are useful when running examples in this project
-feature-1 = []
-feature-2 = []
+__feature-1 = []
+__feature-2 = []
 
 [[example]]
 name = "logging"
-required-features = ["feature-1", "feature-2"]
+required-features = ["__feature-1", "__feature-2"]

@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/cargo-rx/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/cargo-rx/0.1.1")]
 #![warn(rust_2018_idioms, missing_docs)]
 #![deny(warnings, dead_code, unused_imports, unused_mut)]
 
@@ -10,8 +10,10 @@
 //!
 //! > **`cargo-rx` is a simple, modern *R*unner for *Ex*amples in a Cargo project.**
 //!
-//! This tool extends [Cargo] to allow you to easily run examples from the command line.
-//! It provides a single executable: `rx`.
+//! A fuzzy finder tool which extends [Cargo] to allow you to easily search and run examples
+//! from the command line.
+//!
+//! This crate provides a single executable: `rx`.
 //!
 //! [Cargo]: http://doc.crates.io/
 //!
@@ -36,12 +38,22 @@
 //!
 //! ### Windows
 //!
-//! Note that on a *Windows* environment, you will also need to have [`fzf`](https://github.com/junegunn/fzf)
-//! installed and available in your *$PATH* variable.
+//! Note that on a *Windows* environment, you will also need to have [fzf installed]
+//! and available in your *$PATH* variable.
 //!
-//! There is currently a [feature request](https://github.com/lotabout/skim/issues/293) open on `skim`
-//! which proposes adding support for Windows, but this has not been currently implemented yet --
+//! An easy way to install `fzf` is via [Chocolatey]:
+//!
+//! ```console
+//! choco install fzf
+//! ```
+//!
+//! There is currently a [feature request] open on `skim` which proposes adding
+//! support for Windows, but this has not been currently implemented yet --
 //! thus, the `fzf` tool serves as a stand-in alternative for now.
+//!
+//! [fzf installed]: https://github.com/junegunn/fzf#windows
+//! [Chocolatey]: https://chocolatey.org/packages/fzf
+//! [feature request]: https://github.com/lotabout/skim/issues/293
 //!
 //! ## Usage
 //!
