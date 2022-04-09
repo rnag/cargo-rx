@@ -19,11 +19,23 @@ Rust project, try `rx` instead.
 ## Getting started
 -->
 
+## Table of Contents
+
+* [Installation](#installation)
+  * [From binaries](#from-binaries)
+  * [From *crates.io*](#from-cratesio)
+  * [Windows](#windows)
+* [Features](#features)
+* [Contributing](#contributing)
+* [License](#license)
+* [Authors](#authors)
+
 ## Installation
 
 ### From binaries
 
-Check out the [Releases page] for prebuilt binaries for various architectures.
+Check out the [Releases page] for prebuilt binaries compatible
+with various architectures.
     
 ### From *crates.io*
 
