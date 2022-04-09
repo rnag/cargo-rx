@@ -37,7 +37,7 @@ $ cargo install cargo-rx
 Note that on a *Windows* environment, you will also need to have [fzf installed]
 and available in your *$PATH* variable.
 
-An easy way to install **fzf** is via [Chocolatey]:
+An easy way to install fzf is via [Chocolatey]:
 
 ```console
 choco install fzf
