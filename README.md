@@ -34,7 +34,7 @@ Rust project, try `rx` instead.
 
 ### From binaries
 
-Check out the [Releases page] for prebuilt binaries compatible
+Check out the [Releases page] for pre-built binaries compatible
 with various architectures.
     
 ### From *crates.io*
