@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rx"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ritvik Nag <rv.kvetch@gmail.com>"]
 description = "A simple fuzzy finder that allows you to search and run examples from the command line. It comes with the `rx` command."
 documentation = "https://docs.rs/cargo-rx"
