@@ -17,6 +17,13 @@ Possible header types:
   - `other_method()`
 -->
 
+## v0.1.1 (2022-04-09)
+
+- Update docs
+- Update GH actions to publish binaries on the [Releases page]
+
+[Releases page]: https://github.com/rnag/cargo-rx/releases
+
 ## v0.1.0 (2022-04-01)
 
 - Initial Release on [crates.io] :tada:
