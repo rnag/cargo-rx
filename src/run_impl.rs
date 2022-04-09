@@ -10,7 +10,7 @@ mod inner_impl {
     use std::borrow::Cow;
     use std::collections::{HashMap, HashSet};
     use std::io::Write;
-    use std::process::{Output, Stdio};
+    use std::process::{Command, Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
