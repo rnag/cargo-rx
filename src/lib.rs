@@ -92,12 +92,28 @@ pub use types::*;
 ///
 /// [Cargo]: http://doc.crates.io/
 pub fn process_input(args: Args) -> Result<()> {
+    #[cfg(target_family = "windows")]
+    patch_colored_for_windows();
+
     let p = Paths::resolve()?;
 
     let name_to_required_features = p.example_to_required_features()?;
     let files = p.example_file_paths()?;
 
     process_input_inner(files, p, args, name_to_required_features)
+}
+
+/// This is a **patch** so that the `colored` output works as expected
+/// when the `rx` binary is installed with `cargo install` in a
+/// *Windows* environment.
+///
+/// See [the linked issue] for more details.
+///
+/// [the linked issue]: https://github.com/mackwic/colored/issues/76
+#[cfg(target_family = "windows")]
+#[inline]
+fn patch_colored_for_windows() {
+    colored::control::set_virtual_terminal(true).unwrap();
 }
 
 #[cfg(test)]
