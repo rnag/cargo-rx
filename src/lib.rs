@@ -1,6 +1,6 @@
 #![doc(html_root_url = "https://docs.rs/cargo-rx/0.1.1")]
 #![warn(rust_2018_idioms, missing_docs)]
-// #![deny(warnings, dead_code, unused_imports, unused_mut)]
+#![deny(warnings, dead_code, unused_imports, unused_mut)]
 
 //! [![github]](https://github.com/rnag/cargo-rx)&ensp;[![crates-io]](https://crates.io/crates/cargo-rx)&ensp;[![docs-rs]](https://docs.rs/cargo-rx)
 //!
