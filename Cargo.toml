@@ -66,6 +66,7 @@ version-sync = "^0.9"
 __feature-1 = []
 __feature-2 = []
 
+
 [[example]]
 name = "logging"
 required-features = ["__feature-1", "__feature-2"]
