@@ -5,5 +5,5 @@
 //! This is the *first* custom path example.
 //!
 fn main() {
-    println!("Multi-file example #1")
+    println!("This is a custom path example #1")
 }
