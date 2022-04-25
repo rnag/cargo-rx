@@ -20,7 +20,7 @@ fn main() {
             // release: true,
             jobs: Some(2),
             profile: Some("release".to_owned()),
-            features: vec!["feature-1".to_owned()],
+            features: vec!["__feature-1".to_owned()],
             no_default_features: true,
             ignore_rust_version: true,
             color: Some("always".to_owned()),
