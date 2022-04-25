@@ -76,6 +76,7 @@ thus, the `fzf` tool serves as a stand-in alternative for now.
 * Pass arguments after `--` to the selected example.
 * Automatically [enables required-features] when running an example.
 * Play back of most recently run example via the `--replay` option.
+* Automatically enables `+nightly` toolchain when passed in *unstable options* to `cargo run`, such as `--unit-graph`.
 
 [skim]: https://github.com/lotabout/skim
 [enables required-features]: https://github.com/rust-lang/cargo/issues/4663
