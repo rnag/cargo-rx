@@ -26,11 +26,11 @@ Possible header types:
 - Patch `colored` output for Windows; the quickfix is implemented as suggested from [here](https://docs.rs/colored/1.9.3/x86_64-pc-windows-msvc/colored/control/fn.set_virtual_terminal.html).  🙌
 - Display all example files supported by `cargo`, such as multi-file examples and ones with custom file paths. 🎉
 - Examples displayed in the fuzzy finder are now properly sorted, A->Z as expected. 🖐️
+- The terminal output of the command being run, i.e. `cargo run --example <selected example> [..args]`, now correctly displays arguments in quotes such as `--arg "Hello \"world\"!"`, which more closely matches the format of the command being run. 👍
 
 ### Features
 - Add support for options to `cargo run --example`, such as `--release` and `--features`. 🎉
   - Automatically enables `+nightly` toolchain as required, when passed in *unstable options* to `cargo run` such as `--unit-graph`.
-- The terminal output of the command being run, i.e. `cargo run --example <selected example> [..args]`, now correctly displays arguments in quotes such as `--arg "Hello \"world\"!"`, which more closely matches the format of the command being run. 👍
 - Rewire `-p|--prompt-args` to `-i|--input-args`, but retained existing option for backwards-compatibility reasons.
 - Update `Cargo.toml` dependencies.
   - Add `cargo-options` and `path-absolutize`
