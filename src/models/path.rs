@@ -1,22 +1,162 @@
 use crate::*;
 
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
+use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
 use std::path::{Component, Path, PathBuf};
 use std::result::Result as StdResult;
 use std::{env, fs};
 
 use cargo_toml::Manifest;
+use path_absolutize::*;
 
 /// Represents *path info* on a Cargo project.
 #[derive(Debug)]
 pub struct Paths {
     /// *Base path* to a Cargo project directory
     pub root_path: PathBuf,
+
     /// Path to the *examples* in a Cargo project
     pub examples_path: PathBuf,
+
     /// Path to the *Cargo.toml* file
     pub cargo_toml_path: PathBuf,
+
+    /// Parsed contents of the *Cargo.toml* manifest file
+    pub manifest: Manifest,
+}
+
+/// Represents the *type* of an example file.
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum ExampleType {
+    /// This represents a *simple* example file, for ex. a `hello_world.rs`
+    /// file in an `examples/` folder.
+    Simple,
+
+    /// This represents a `main.rs` file nested within a sub-folder in an
+    /// `examples/` folder; the Rust book also calls this a **multi-file**
+    /// example.
+    MultiFile,
+
+    /// This represents an example file with a *custom path* defined in the
+    /// `Cargo.toml` file of a Cargo project.
+    Custom,
+}
+
+/// Represents an *example file* in a Cargo project.
+#[derive(Debug, Eq)]
+pub struct ExampleFile {
+    /// The *file stem* (i.e. filename without the extension) for an
+    /// example file, or the *folder name* in the case of a `main.rs`
+    /// example within a sub-folder.
+    pub name: String,
+
+    /// Path to example file
+    pub path: PathBuf,
+
+    /// Type of example file
+    pub path_type: ExampleType,
+}
+
+/// *order* a sequence of `ExampleFile`s by the `name` field.
+
+impl Ord for ExampleFile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.name.cmp(&other.name)
+    }
+}
+
+impl PartialOrd for ExampleFile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// Determine *equality* and *hash* using the `path` field.
+
+impl PartialEq<Self> for ExampleFile {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+    }
+}
+
+impl Hash for ExampleFile {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.path.hash(state)
+    }
+}
+
+impl PartialEq<PathBuf> for ExampleFile {
+    fn eq(&self, other: &PathBuf) -> bool {
+        &self.path == other
+    }
+}
+
+impl TryFrom<PathBuf> for ExampleFile {
+    type Error = Error;
+
+    /// Try to create an `ExampleFile` from a `PathBuf` object.
+    fn try_from(mut path: PathBuf) -> StdResult<Self, Self::Error> {
+        let file_type = path.metadata()?.file_type();
+
+        if file_type.is_dir() {
+            path.push("main.rs");
+            if path.is_file() {
+                let mut comps = path.components();
+                // discard the filename (main.rs)
+                let _ = comps.next_back();
+                // return the parent folder name
+                let name = comps
+                    .next_back()
+                    .unwrap()
+                    .as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+
+                return Ok(Self {
+                    name,
+                    path,
+                    path_type: ExampleType::MultiFile,
+                });
+            }
+        } else if file_type.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
+            let name = path.file_stem().unwrap().to_str().unwrap().to_owned();
+
+            return Ok(Self {
+                name,
+                path,
+                path_type: ExampleType::Simple,
+            });
+        }
+
+        // TODO
+        Err(Error::new(ErrorKind::InvalidData, "not an example file"))
+    }
+}
+
+impl ExampleFile {
+    /// Create an `ExampleFile` from a example `name` and a (possibly relative)
+    /// `path`.
+    ///
+    /// # Arguments
+    /// * `root` - The current working directory, used in case the path is
+    ///            relative.
+    /// * `name` - The name of the example file, without the extension
+    /// * `path` - The path to the example file. This can be a relative path
+    ///            and contain characters such as `.` and `..` for instance.
+    pub fn from_name_and_path<P: AsRef<Path>>(root: &Path, name: String, path: P) -> Self {
+        let abs_path = path.as_ref().absolutize_from(root).unwrap();
+        let path = PathBuf::from(abs_path);
+
+        Self {
+            name,
+            path,
+            path_type: ExampleType::Custom,
+        }
+    }
 }
 
 impl Paths {
@@ -41,10 +181,14 @@ impl Paths {
         let cargo_toml_path = current_dir.join(&cargo_toml_file);
 
         if examples_path.is_dir() && cargo_toml_path.is_file() {
+            let manifest_contents = fs::read(&cargo_toml_path)?;
+            let manifest = Manifest::from_slice(&manifest_contents)?;
+
             return Ok(Self {
                 root_path: current_dir,
                 examples_path,
                 cargo_toml_path,
+                manifest,
             });
         }
 
@@ -59,10 +203,14 @@ impl Paths {
                     let cargo_toml_path = root_path.join(&cargo_toml_file);
 
                     if examples_path.is_dir() && cargo_toml_path.is_file() {
+                        let manifest_contents = fs::read(&cargo_toml_path)?;
+                        let manifest = Manifest::from_slice(&manifest_contents)?;
+
                         return Ok(Self {
                             root_path,
                             examples_path,
                             cargo_toml_path,
+                            manifest,
                         });
                     }
                 }
@@ -82,15 +230,15 @@ impl Paths {
 
     /// Return a mapping of *example name* to a list of *required features* for an example.
     pub fn example_to_required_features(&self) -> Result<HashMap<String, String>> {
-        let manifest_contents = fs::read(&self.cargo_toml_path)?;
-        let manifest = Manifest::from_slice(&manifest_contents)?;
-
         let mut name_to_required_features: HashMap<String, String> =
-            HashMap::with_capacity(manifest.example.len());
-        for example in manifest.example {
+            HashMap::with_capacity(self.manifest.example.len());
+        let manifest = &self.manifest;
+
+        for example in manifest.example.iter() {
             match example.name {
-                Some(name) if !example.required_features.is_empty() => {
-                    name_to_required_features.insert(name, example.required_features.join(" "));
+                Some(ref name) if !example.required_features.is_empty() => {
+                    name_to_required_features
+                        .insert(name.clone(), example.required_features.join(" "));
                 }
                 _ => (),
             };
@@ -100,13 +248,34 @@ impl Paths {
     }
 
     /// Returns file paths (`PathBuf` objects) of each *example* file in the Cargo project.
-    pub fn example_file_paths(&self) -> Result<Vec<PathBuf>> {
-        let mut files = Vec::new();
+    pub fn example_file_paths(&self) -> Result<HashSet<ExampleFile>> {
+        let mut files = HashSet::new();
+
+        let manifest = &self.manifest;
+        let root = &self.root_path;
+
+        for example in manifest.example.iter() {
+            if let Some(ref path) = example.path {
+                if let Some(ref name) = example.name {
+                    // I debated whether to add this for Mac/Linux, however it
+                    // seems like `cargo run --example` doesn't support
+                    // backslashes (\) in `example.path` in Cargo.toml either,
+                    // so it's likely not worth the effort in this case.
+
+                    // #[cfg(not(target_family = "windows"))]
+                    // let path = path.replace('\\', "/");
+
+                    let f = ExampleFile::from_name_and_path(root, name.to_owned(), path);
+                    files.insert(f);
+                }
+            }
+        }
+
         for entry in fs::read_dir(&self.examples_path)?.filter_map(StdResult::ok) {
             let path: PathBuf = entry.path();
 
-            if path.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
-                files.push(path);
+            if let Ok(f) = ExampleFile::try_from(path) {
+                files.insert(f);
             }
         }
 

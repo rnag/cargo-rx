@@ -9,7 +9,7 @@ pub fn parse_args() -> Args {
 fn main() -> Result<()> {
     let args = parse_args();
 
-    if args.verbose {
+    if args.cargo.verbose > 0 {
         println!("VERBOSE output is enabled");
         println!("Arguments: {:#?}", args);
     }

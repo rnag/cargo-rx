@@ -12,6 +12,7 @@ pub struct ReplayConfig {
 pub struct LastRun {
     /// Example *name*
     pub name: String,
+
     /// Example *arguments* passed in via command line
     pub arguments: Vec<String>,
 }

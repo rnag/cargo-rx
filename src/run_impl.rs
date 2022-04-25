@@ -1,76 +1,27 @@
 use crate::*;
-
-use std::path::Path;
-use std::process::Command;
-
-use colored::Colorize;
-
 pub(crate) use inner_impl::*;
 
-/// Call `cargo run --example` on an example `name`
-pub fn cargo_run_example<'a, 'b, T: IntoIterator>(
-    root_path: &'a Path,
-    name: &'a str,
-    args: T,
-    required_features: Option<&'a String>,
-) -> Result<()>
-where
-    Vec<&'a str>: Extend<<T as IntoIterator>::Item>,
-{
-    let mut base_args = vec!["run", "--example", name];
-
-    if let Some(feat) = required_features {
-        base_args.push("--features");
-        base_args.push(feat);
-    };
-
-    base_args.extend(args);
-
-    #[cfg(target_family = "windows")]
-    println!(
-        " {} {} {}",
-        ">>".white().bold(),
-        CARGO_CMD.bright_blue().italic(),
-        base_args.join(" ").as_str().bright_blue().italic()
-    );
-
-    #[cfg(not(target_family = "windows"))]
-    println!(
-        " {} {} {}",
-        "❯❯".white().bold(),
-        CARGO_CMD.blue().italic(),
-        base_args.join(" ").as_str().blue().italic()
-    );
-
-    let _res = Command::new(CARGO_CMD)
-        .args(base_args)
-        .current_dir(root_path)
-        .spawn()?
-        .wait()?;
-
-    Ok(())
-}
+use colored::Colorize;
 
 #[cfg(target_family = "windows")]
 mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::io::Write;
-    use std::path::PathBuf;
     use std::process::{Command, Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        my_files: Vec<PathBuf>,
+        example_files: HashSet<ExampleFile>,
         dir: Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let mut cfg: ReplayConfig = Default::default();
-        let fzf: Output;
+        let output: Output;
 
         let examples = if args.replay {
             cfg = get_last_replay()?;
@@ -78,28 +29,38 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let example_names = my_files
-                .iter()
-                .map(|f| f.file_stem().unwrap().to_str().unwrap())
-                .collect::<Vec<_>>()
-                .join("\n");
+            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name.as_str()).collect();
 
-            let echo = Command::new(ECHO_CMD)
-                .arg(format!("'{example_names}'"))
+            // Sort A -> Z, using the names of example files
+            example_names.sort_unstable();
+
+            let example_names = example_names.join("\n");
+
+            // I was previously testing with the `echo` command -- i.e. the
+            // equivalent of `echo "one\ntwo\nthree" | fzf` -- however this is
+            // not needed anymore, as I realized we can pipe stdin directly;
+            // see below.
+
+            let mut child = Command::new(FZF_CMD)
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()?;
-
-            let piped_input = echo.stdout.unwrap();
-
-            fzf = Command::new(FZF_CMD)
+                // .stderr(Stdio::piped())
                 .arg("-m")
-                .stdin(piped_input)
-                .output()
-                .unwrap_or_else(|e| panic!("failed to execute `{}` process: {}", FZF_CMD, e));
+                .spawn()
+                .expect("Failed to spawn child process");
 
-            std::str::from_utf8(&fzf.stdout)?
+            // pipe stdin in to the `fzf` command
+            let mut stdin = child.stdin.take().expect("Failed to open stdin");
+            std::thread::spawn(move || {
+                stdin
+                    .write_all(example_names.as_bytes())
+                    .expect("Failed to write to stdin");
+            });
+
+            // get the output from running `fzf`
+            output = child.wait_with_output().expect("Failed to read stdout");
+
+            std::str::from_utf8(&output.stdout)?
                 .split_terminator('\n')
                 .map(Cow::Borrowed)
                 .collect()
@@ -117,9 +78,9 @@ mod inner_impl {
                 extra_args.push(arg);
             }
             extra_args
-        } else if args.prompt_args {
+        } else if args.input_args {
             // Print label for input
-            print!("Arguments: ");
+            print!("{} ", "Arguments:".cyan().bold());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();
@@ -137,10 +98,13 @@ mod inner_impl {
             Vec::default()
         };
 
+        let example_args_ref = &example_args;
+        let root_ref = &dir.root_path;
+
         // Save info on the example we're running, so we can `--replay` it if needed
         match examples.first() {
             Some(name) if !args.replay => {
-                save_last_replay(name, &example_args)?;
+                save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
@@ -150,7 +114,8 @@ mod inner_impl {
             let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
-            cargo_run_example(&dir.root_path, name, &example_args, req_features)?;
+            args.cargo
+                .run_example(root_ref, name, example_args_ref, req_features)?;
         }
 
         Ok(())
@@ -162,16 +127,15 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::io::Write;
-    use std::path::PathBuf;
     use std::sync::Arc;
 
     use skim::prelude::*;
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        my_files: Vec<PathBuf>,
+        example_files: HashSet<ExampleFile>,
         dir: Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
@@ -186,6 +150,11 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
+            let mut example_files: Vec<_> = Vec::from_iter(example_files);
+
+            // Sort A -> Z, using the names of example files
+            example_files.sort_unstable();
+
             let options = SkimOptionsBuilder::default()
                 // .height(Some("50%"))
                 .preview_window(Some("right:70%"))
@@ -196,10 +165,10 @@ mod inner_impl {
 
             let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-            for ex_file in my_files.into_iter() {
+            for ex_file in example_files.into_iter() {
                 let _ = tx_item.send(Arc::new(ExampleFileItem {
-                    file_stem: ex_file.file_stem().unwrap().to_os_string(),
-                    file_path: ex_file,
+                    file_stem: ex_file.name,
+                    file_path: ex_file.path,
                 }));
             }
             drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -232,9 +201,9 @@ mod inner_impl {
                 extra_args.push(arg);
             }
             extra_args
-        } else if args.prompt_args {
+        } else if args.input_args {
             // Print label for input
-            print!("Arguments: ");
+            print!("{} ", "Arguments:".cyan().bold());
             std::io::stdout().flush()?;
             // Read user input
             let mut line = String::new();
@@ -252,10 +221,13 @@ mod inner_impl {
             Vec::default()
         };
 
+        let example_args_ref = &example_args;
+        let root_ref = &dir.root_path;
+
         // Save info on the example we're running, so we can `--replay` it if needed
         match examples.first() {
             Some(name) if !args.replay => {
-                save_last_replay(name, &example_args)?;
+                save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
@@ -265,7 +237,8 @@ mod inner_impl {
             let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
-            cargo_run_example(&dir.root_path, name, &example_args, req_features)?;
+            args.cargo
+                .run_example(root_ref, name, example_args_ref, req_features)?;
         }
 
         Ok(())

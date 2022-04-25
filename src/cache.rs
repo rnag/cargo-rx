@@ -6,9 +6,8 @@ use std::path::PathBuf;
 
 /// Get the *local cache* directory where we store the *last replay* info
 pub fn last_replay_path() -> PathBuf {
-    dirs::home_dir()
+    home::cargo_home()
         .unwrap()
-        .join(".cargo")
         .join(BINARY_NAME)
         .join("replays")
         .join(SETTINGS_TOML)

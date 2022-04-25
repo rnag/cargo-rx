@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/cargo-rx/0.1.1")]
+#![doc(html_root_url = "https://docs.rs/cargo-rx/0.2.0")]
 #![warn(rust_2018_idioms, missing_docs)]
 #![deny(warnings, dead_code, unused_imports, unused_mut)]
 
@@ -86,25 +86,46 @@
 mod cache;
 mod constants;
 mod models;
+// noinspection SpellCheckingInspection
+mod osstringext;
+mod run_ext;
 mod run_impl;
 mod types;
 
 use cache::*;
 pub use constants::*;
 pub use models::*;
-pub use run_impl::*;
+pub use osstringext::*;
+pub use run_ext::*;
+pub(crate) use run_impl::*;
 pub use types::*;
 
 /// Processes an input to *select or run* an **example** in a [Cargo] project.
 ///
 /// [Cargo]: http://doc.crates.io/
 pub fn process_input(args: Args) -> Result<()> {
+    #[cfg(target_family = "windows")]
+    patch_colored_for_windows();
+
     let p = Paths::resolve()?;
 
     let name_to_required_features = p.example_to_required_features()?;
     let files = p.example_file_paths()?;
 
     process_input_inner(files, p, args, name_to_required_features)
+}
+
+/// This is a **patch** so that the `colored` output works as expected
+/// when the `rx` binary is installed with `cargo install` in a
+/// *Windows* environment.
+///
+/// See [the linked issue] for more details.
+///
+/// [the linked issue]: https://github.com/mackwic/colored/issues/76
+#[cfg(target_family = "windows")]
+#[inline]
+fn patch_colored_for_windows() {
+    colored::control::set_virtual_terminal(true).unwrap();
 }
 
 #[cfg(test)]
