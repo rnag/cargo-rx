@@ -26,7 +26,7 @@ pub trait RunExampleExt {
         root_path: &'a Path,
         name: &'a str,
         args: T,
-        required_features: Option<&'a String>,
+        required_features: &'a Option<String>,
     ) -> Result<()>
     where
         <T as IntoIterator>::Item: AsRef<OsStr>;
@@ -51,7 +51,7 @@ impl RunExampleExt for CommonOptions {
         root_path: &'a Path,
         name: &'a str,
         args: T,
-        required_features: Option<&'a String>,
+        required_features: &'a Option<String>,
     ) -> Result<()>
     where
         <T as IntoIterator>::Item: AsRef<OsStr>,

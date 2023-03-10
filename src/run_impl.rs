@@ -127,7 +127,7 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::{BTreeMap, HashMap};
+    use std::collections::BTreeMap;
     use std::io::Write;
     use std::sync::Arc;
 
@@ -138,7 +138,6 @@ mod inner_impl {
         example_file_name_to_path: BTreeMap<Cow<'_, str>, ExampleFile>,
         dir: &Paths,
         args: Args,
-        name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let selected_items: Vec<Arc<dyn SkimItem>>;
@@ -229,9 +228,7 @@ mod inner_impl {
 
         for example_name in examples_to_run {
             let name = example_name.as_ref();
-
             let example = example_file_name_to_path.get(name).unwrap();
-            let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
             args.cargo.run_example(
@@ -239,7 +236,7 @@ mod inner_impl {
                 root_ref,
                 name,
                 example_args_ref,
-                req_features,
+                &example.required_features,
             )?;
         }
 
