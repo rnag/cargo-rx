@@ -290,15 +290,15 @@ impl Paths {
     /// Returns an ordered (A -> Z) mapping of file name to paths (`PathBuf`
     /// objects) of each *example* file in the Cargo project.
     pub fn example_file_name_to_path(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
-        let mut files: BTreeMap<Cow<'_, str>, ExampleFile> = BTreeMap::new();
+        let mut files: BTreeMap<Cow<'_, str>, _> = BTreeMap::new();
         let mut file_paths: HashSet<PathBuf> = HashSet::new();
 
         #[inline]
         fn required_features(example: &Product) -> Option<String> {
-            if !example.required_features.is_empty() {
-                Some(example.required_features.join(" "))
-            } else {
+            if example.required_features.is_empty() {
                 None
+            } else {
+                Some(example.required_features.join(" "))
             }
         }
 
