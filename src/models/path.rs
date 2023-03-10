@@ -142,12 +142,13 @@ impl TryFrom<PathBuf> for ExampleFile {
                 // the parent folder name
                 let name = path.last();
 
-                // TODO is length ok?
                 let main_rs = path!(
                     path,
                     "src",
                     MAIN_RS;
-                    capacity = path.as_os_str().len() + 10
+                    // "srcmain.rs".len() == 10
+                    //   adding +2 because of slashes (/) between components
+                    capacity = path.as_os_str().len() + 12
                 );
 
                 let path = if main_rs.is_file() {
@@ -157,7 +158,6 @@ impl TryFrom<PathBuf> for ExampleFile {
                 };
 
                 return Ok(Self {
-                    // return the parent folder name
                     name,
                     path,
                     path_type: ExampleType::Crate(cargo_toml),
@@ -289,8 +289,9 @@ impl Paths {
         Ok(name_to_required_features)
     }
 
-    /// Returns file paths (`PathBuf` objects) of each *example* file in the Cargo project.
-    pub fn example_file_paths(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
+    /// Returns an ordered (A -> Z) mapping of file name to paths (`PathBuf`
+    /// objects) of each *example* file in the Cargo project.
+    pub fn example_file_name_to_path(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
         let mut files: BTreeMap<Cow<'_, str>, ExampleFile> = BTreeMap::new();
 
         let manifest = &self.manifest;

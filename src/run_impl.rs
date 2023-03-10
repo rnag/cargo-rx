@@ -135,7 +135,7 @@ mod inner_impl {
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_files: BTreeMap<Cow<'_, str>, ExampleFile>,
+        example_file_name_to_path: BTreeMap<Cow<'_, str>, ExampleFile>,
         dir: &Paths,
         args: Args,
         name_to_required_features: HashMap<String, String>,
@@ -144,7 +144,7 @@ mod inner_impl {
         let selected_items: Vec<Arc<dyn SkimItem>>;
         let mut cfg: ReplayConfig = Default::default();
 
-        let examples = if args.replay {
+        let examples_to_run = if args.replay {
             cfg = get_last_replay()?;
             vec![Cow::Owned(cfg.last_run.name)]
         } else if let Some(example) = args.name {
@@ -160,10 +160,10 @@ mod inner_impl {
 
             let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-            for ex_file in example_files.values() {
+            for example in example_file_name_to_path.values() {
                 let _ = tx_item.send(Arc::new(ExampleFileItem {
-                    file_stem: ex_file.name.clone(),
-                    file_path: ex_file.path.clone(),
+                    file_stem: example.name.clone(),
+                    file_path: example.path.clone(),
                 }));
             }
             drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -220,22 +220,22 @@ mod inner_impl {
         let root_ref = &dir.root_path;
 
         // Save info on the example we're running, so we can `--replay` it if needed
-        match examples.first() {
+        match examples_to_run.first() {
             Some(name) if !args.replay => {
                 save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
 
-        for example in examples {
-            let ex_file = example_files.get(&example).unwrap();
+        for example_name in examples_to_run {
+            let name = example_name.as_ref();
 
-            let name = example.as_ref();
+            let example = example_file_name_to_path.get(name).unwrap();
             let req_features: Option<&String> = name_to_required_features.get(name);
 
             // Run the Cargo example script
             args.cargo.run_example(
-                &ex_file.path_type,
+                &example.path_type,
                 root_ref,
                 name,
                 example_args_ref,

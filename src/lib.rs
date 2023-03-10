@@ -112,7 +112,7 @@ pub fn process_input(args: Args) -> Result<()> {
     let p = Paths::resolve()?;
 
     let name_to_required_features = p.example_to_required_features()?;
-    let files = p.example_file_paths()?;
+    let files = p.example_file_name_to_path()?;
 
     process_input_inner(files, &p, args, name_to_required_features)
 }
