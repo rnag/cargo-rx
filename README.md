@@ -17,7 +17,7 @@ This crate provides a single executable: `rx`.
 Basically anywhere you would use `cargo run --example` in a
 Rust project, try `rx` instead.
 
-> **If this project has helped you, please consider making a [donation](https://www.buymeacoffee.com/ritviknag).**
+**If this project has helped you, please consider making a [donation](https://www.buymeacoffee.com/ritviknag).**
 
 <!-- TODO
 ## Getting started
