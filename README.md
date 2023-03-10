@@ -7,13 +7,17 @@
 
 **`cargo-rx` is a simple fuzzy finder and *R*unner for *Ex*amples in a [Cargo] project.**
 
-[![rx demo](https://asciinema.org/a/483363.svg)](https://asciinema.org/a/483363)
+<a href="https://asciinema.org/a/483363">
+  <img src="https://asciinema.org/a/483363.svg" alt="rx demo" height="70%" width="80%" />
+</a>
 
 [Cargo]: http://doc.crates.io/
 
 This crate provides a single executable: `rx`.
 Basically anywhere you would use `cargo run --example` in a
 Rust project, try `rx` instead.
+
+> **If this project has helped you, please consider making a [donation](https://www.buymeacoffee.com/ritviknag).**
 
 <!-- TODO
 ## Getting started
@@ -90,6 +94,12 @@ Check out the [Contributing][] section in the docs for more info.
 
 [Contributing]: CONTRIBUTING.md
 [open an issue]: https://github.com/rnag/cargo-rx/issues
+
+## Buy me a coffee
+
+Liked some of my work? Buy me a coffee (or more likely a beer)
+
+<a href="https://www.buymeacoffee.com/ritviknag" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;"></a>
 
 ## License
 
