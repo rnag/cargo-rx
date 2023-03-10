@@ -13,6 +13,7 @@ pub trait RunExampleExt {
     ///
     /// # Arguments
     ///
+    /// * `ex_type` - Type of example.
     /// * `root_path` - the base path to the Cargo directory with a
     ///                 `Cargo.toml` file.
     /// * `name` - the name of the Cargo example to run.
@@ -21,6 +22,7 @@ pub trait RunExampleExt {
     ///                         the example.
     fn run_example<'a, T: IntoIterator>(
         &self,
+        ex_type: &'a ExampleType,
         root_path: &'a Path,
         name: &'a str,
         args: T,
@@ -32,13 +34,20 @@ pub trait RunExampleExt {
 
 /// Add `run --example <name>` as arguments to Command `cmd`
 #[inline]
-fn add_run_example(cmd: &mut Command, name: &str) {
-    cmd.arg("run").arg("--example").arg(name);
+fn add_run_arg(cmd: &mut Command, name: &str, ex_type: &ExampleType, root_path: &Path) {
+    if let ExampleType::Crate(manifest_path) = ex_type {
+        cmd.arg("run")
+            .arg("--manifest-path")
+            .arg(manifest_path.strip_prefix(root_path).unwrap());
+    } else {
+        cmd.arg("run").arg("--example").arg(name);
+    }
 }
 
 impl RunExampleExt for CommonOptions {
     fn run_example<'a, T: IntoIterator>(
         &self,
+        ex_type: &'a ExampleType,
         root_path: &'a Path,
         name: &'a str,
         args: T,
@@ -58,11 +67,11 @@ impl RunExampleExt for CommonOptions {
         let has_unstable_opts = has_config || has_unstable_flags || self.unit_graph;
 
         if !has_unstable_opts {
-            add_run_example(&mut run, name);
+            add_run_arg(&mut run, name, ex_type, root_path);
         } else {
             // enable the `+nightly` toolchain
             run.arg("+nightly");
-            add_run_example(&mut run, name);
+            add_run_arg(&mut run, name, ex_type, root_path);
             // enable the `unstable-options`
             run.arg("-Z").arg("unstable-options");
         }

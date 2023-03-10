@@ -1,7 +1,8 @@
 use crate::*;
 
+use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::io::{Error, ErrorKind};
@@ -11,6 +12,22 @@ use std::{env, fs};
 
 use cargo_toml::Manifest;
 use path_absolutize::*;
+
+/// Allows creating a Path with a Builder Pattern
+///
+/// Credits: https://internals.rust-lang.org/t/add-zero-cost-builder-methods-to-pathbuf/15318/16?u=rnag
+macro_rules! path {
+    ( $($segment:expr),+ ) => {{
+        let mut path = ::std::path::PathBuf::new();
+        $(path.push($segment);)*
+        path
+    }};
+    ( $($segment:expr),+; capacity = $n:expr ) => {{
+        let mut path = ::std::path::PathBuf::with_capacity($n);
+        $(path.push($segment);)*
+        path
+    }};
+}
 
 /// Represents *path info* on a Cargo project.
 #[derive(Debug)]
@@ -39,6 +56,12 @@ pub enum ExampleType {
     /// `examples/` folder; the Rust book also calls this a **multi-file**
     /// example.
     MultiFile,
+
+    /// This represents a binary crate, i.e. a sub-folder containing a
+    /// `Cargo.toml` file in an `examples/` folder; Note that Cargo (and
+    /// notably `cargo run --example`) does not support this particular
+    /// use-case, as of yet.
+    Crate(PathBuf),
 
     /// This represents an example file with a *custom path* defined in the
     /// `Cargo.toml` file of a Cargo project.
@@ -98,28 +121,46 @@ impl TryFrom<PathBuf> for ExampleFile {
     type Error = Error;
 
     /// Try to create an `ExampleFile` from a `PathBuf` object.
-    fn try_from(mut path: PathBuf) -> StdResult<Self, Self::Error> {
+    fn try_from(path: PathBuf) -> StdResult<Self, Self::Error> {
         let file_type = path.metadata()?.file_type();
 
         if file_type.is_dir() {
-            path.push("main.rs");
-            if path.is_file() {
-                let mut comps = path.components();
-                // discard the filename (main.rs)
-                let _ = comps.next_back();
-                // return the parent folder name
-                let name = comps
-                    .next_back()
-                    .unwrap()
-                    .as_os_str()
-                    .to_str()
-                    .unwrap()
-                    .to_owned();
+            let main_rs = path.join(MAIN_RS);
+
+            if main_rs.is_file() {
+                return Ok(Self {
+                    // return the parent folder name
+                    name: path.last(),
+                    path: main_rs,
+                    path_type: ExampleType::MultiFile,
+                });
+            }
+
+            let cargo_toml = path.join(CARGO_TOML);
+
+            if cargo_toml.is_file() {
+                // the parent folder name
+                let name = path.last();
+
+                // TODO is length ok?
+                let main_rs = path!(
+                    path,
+                    "src",
+                    MAIN_RS;
+                    capacity = path.as_os_str().len() + 10
+                );
+
+                let path = if main_rs.is_file() {
+                    main_rs
+                } else {
+                    cargo_toml.clone()
+                };
 
                 return Ok(Self {
+                    // return the parent folder name
                     name,
                     path,
-                    path_type: ExampleType::MultiFile,
+                    path_type: ExampleType::Crate(cargo_toml),
                 });
             }
         } else if file_type.is_file() && matches!(path.extension(), Some(e) if e == RUST_FILE_EXT) {
@@ -177,8 +218,8 @@ impl Paths {
         let examples_folder = Path::new(EXAMPLES_FOLDER);
         let cargo_toml_file = Path::new(CARGO_TOML);
 
-        let examples_path = current_dir.join(&examples_folder);
-        let cargo_toml_path = current_dir.join(&cargo_toml_file);
+        let examples_path = current_dir.join(examples_folder);
+        let cargo_toml_path = current_dir.join(cargo_toml_file);
 
         if examples_path.is_dir() && cargo_toml_path.is_file() {
             let manifest_contents = fs::read(&cargo_toml_path)?;
@@ -199,8 +240,8 @@ impl Paths {
                 Component::Normal(_) | Component::CurDir | Component::ParentDir => {
                     let root_path = comps.as_path().to_path_buf();
 
-                    let examples_path = root_path.join(&examples_folder);
-                    let cargo_toml_path = root_path.join(&cargo_toml_file);
+                    let examples_path = root_path.join(examples_folder);
+                    let cargo_toml_path = root_path.join(cargo_toml_file);
 
                     if examples_path.is_dir() && cargo_toml_path.is_file() {
                         let manifest_contents = fs::read(&cargo_toml_path)?;
@@ -229,6 +270,7 @@ impl Paths {
     }
 
     /// Return a mapping of *example name* to a list of *required features* for an example.
+    // TODO merge with below!
     pub fn example_to_required_features(&self) -> Result<HashMap<String, String>> {
         let mut name_to_required_features: HashMap<String, String> =
             HashMap::with_capacity(self.manifest.example.len());
@@ -248,8 +290,8 @@ impl Paths {
     }
 
     /// Returns file paths (`PathBuf` objects) of each *example* file in the Cargo project.
-    pub fn example_file_paths(&self) -> Result<HashSet<ExampleFile>> {
-        let mut files = HashSet::new();
+    pub fn example_file_paths(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
+        let mut files: BTreeMap<Cow<'_, str>, ExampleFile> = BTreeMap::new();
 
         let manifest = &self.manifest;
         let root = &self.root_path;
@@ -264,9 +306,8 @@ impl Paths {
 
                     // #[cfg(not(target_family = "windows"))]
                     // let path = path.replace('\\', "/");
-
                     let f = ExampleFile::from_name_and_path(root, name.to_owned(), path);
-                    files.insert(f);
+                    files.insert(Cow::Borrowed(name), f);
                 }
             }
         }
@@ -275,7 +316,7 @@ impl Paths {
             let path: PathBuf = entry.path();
 
             if let Ok(f) = ExampleFile::try_from(path) {
-                files.insert(f);
+                files.insert(Cow::Owned(f.name.to_owned()), f);
             }
         }
 
