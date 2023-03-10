@@ -31,6 +31,7 @@ Rust project, try `rx` instead.
   * [Windows](#windows)
 * [Features](#features)
 * [Contributing](#contributing)
+* [Buy me a coffee](#buy-me-a-coffee)
 * [License](#license)
 * [Authors](#authors)
 
