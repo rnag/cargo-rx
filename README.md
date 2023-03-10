@@ -8,7 +8,7 @@
 **`cargo-rx` is a simple fuzzy finder and *R*unner for *Ex*amples in a [Cargo] project.**
 
 <a href="https://asciinema.org/a/483363">
-  <img src="https://asciinema.org/a/483363.svg" alt="rx demo" height="70%" width="80%" />
+  <img src="https://asciinema.org/a/483363.svg" alt="rx demo" height="50%" width="70%" />
 </a>
 
 [Cargo]: http://doc.crates.io/
