@@ -8,33 +8,31 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::BTreeMap;
     use std::io::Write;
     use std::process::{Command, Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_files: HashSet<ExampleFile>,
-        dir: Paths,
+        example_file_name_to_path: BTreeMap<Cow<'_, str>, ExampleFile>,
+        dir: &Paths,
         args: Args,
-        name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let mut cfg: ReplayConfig = Default::default();
         let output: Output;
 
-        let examples = if args.replay {
+        let examples_to_run = if args.replay {
             cfg = get_last_replay()?;
             vec![Cow::Owned(cfg.last_run.name)]
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name.as_str()).collect();
-
-            // Sort A -> Z, using the names of example files
-            example_names.sort_unstable();
-
-            let example_names = example_names.join("\n");
+            let example_names: String = example_file_name_to_path
+                .keys()
+                .map(|k| k.as_ref())
+                .collect::<Vec<_>>()
+                .join("\n");
 
             // I was previously testing with the `echo` command -- i.e. the
             // equivalent of `echo "one\ntwo\nthree" | fzf` -- however this is
@@ -102,20 +100,25 @@ mod inner_impl {
         let root_ref = &dir.root_path;
 
         // Save info on the example we're running, so we can `--replay` it if needed
-        match examples.first() {
+        match examples_to_run.first() {
             Some(name) if !args.replay => {
                 save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
 
-        for example in examples {
-            let name = example.as_ref();
-            let req_features: Option<&String> = name_to_required_features.get(name);
+        for example_name in examples_to_run {
+            let name = example_name.as_ref();
+            let example = example_file_name_to_path.get(name).unwrap();
 
             // Run the Cargo example script
-            args.cargo
-                .run_example(root_ref, name, example_args_ref, req_features)?;
+            args.cargo.run_example(
+                &example.path_type,
+                root_ref,
+                name,
+                example_args_ref,
+                &example.required_features,
+            )?;
         }
 
         Ok(())
