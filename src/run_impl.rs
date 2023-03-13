@@ -8,33 +8,31 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::BTreeMap;
     use std::io::Write;
     use std::process::{Command, Output, Stdio};
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_files: HashSet<ExampleFile>,
-        dir: Paths,
+        example_files: BTreeMap<Cow<'_, str>, ExampleFile>,
+        dir: &Paths,
         args: Args,
-        name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let mut cfg: ReplayConfig = Default::default();
         let output: Output;
 
-        let examples = if args.replay {
+        let examples_to_run = if args.replay {
             cfg = get_last_replay()?;
             vec![Cow::Owned(cfg.last_run.name)]
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let mut example_names: Vec<_> = example_files.iter().map(|f| f.name.as_str()).collect();
-
-            // Sort A -> Z, using the names of example files
-            example_names.sort_unstable();
-
-            let example_names = example_names.join("\n");
+            let example_names: String = example_files
+                .keys()
+                .map(|k| k.as_ref())
+                .collect::<Vec<_>>()
+                .join("\n");
 
             // I was previously testing with the `echo` command -- i.e. the
             // equivalent of `echo "one\ntwo\nthree" | fzf` -- however this is
@@ -102,20 +100,25 @@ mod inner_impl {
         let root_ref = &dir.root_path;
 
         // Save info on the example we're running, so we can `--replay` it if needed
-        match examples.first() {
+        match examples_to_run.first() {
             Some(name) if !args.replay => {
                 save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
 
-        for example in examples {
-            let name = example.as_ref();
-            let req_features: Option<&String> = name_to_required_features.get(name);
+        for example_name in examples_to_run {
+            let name = example_name.as_ref();
+            let example = example_files.get(name).unwrap();
 
             // Run the Cargo example script
-            args.cargo
-                .run_example(root_ref, name, example_args_ref, req_features)?;
+            args.cargo.run_example(
+                &example.path_type,
+                root_ref,
+                name,
+                example_args_ref,
+                &example.required_features,
+            )?;
         }
 
         Ok(())
@@ -127,7 +130,7 @@ mod inner_impl {
     use super::*;
 
     use std::borrow::Cow;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::BTreeMap;
     use std::io::Write;
     use std::sync::Arc;
 
@@ -135,26 +138,20 @@ mod inner_impl {
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_files: HashSet<ExampleFile>,
-        dir: Paths,
+        example_files: BTreeMap<Cow<'_, str>, ExampleFile>,
+        dir: &Paths,
         args: Args,
-        name_to_required_features: HashMap<String, String>,
     ) -> Result<()> {
         let script_args = args.args;
         let selected_items: Vec<Arc<dyn SkimItem>>;
         let mut cfg: ReplayConfig = Default::default();
 
-        let examples = if args.replay {
+        let examples_to_run = if args.replay {
             cfg = get_last_replay()?;
             vec![Cow::Owned(cfg.last_run.name)]
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let mut example_files: Vec<_> = Vec::from_iter(example_files);
-
-            // Sort A -> Z, using the names of example files
-            example_files.sort_unstable();
-
             let options = SkimOptionsBuilder::default()
                 // .height(Some("50%"))
                 .preview_window(Some("right:70%"))
@@ -165,10 +162,10 @@ mod inner_impl {
 
             let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-            for ex_file in example_files.into_iter() {
+            for example in example_files.values() {
                 let _ = tx_item.send(Arc::new(ExampleFileItem {
-                    file_stem: ex_file.name,
-                    file_path: ex_file.path,
+                    file_stem: example.name.clone(),
+                    file_path: example.path.clone(),
                 }));
             }
             drop(tx_item); // so that skim could know when to stop waiting for more items.
@@ -225,20 +222,25 @@ mod inner_impl {
         let root_ref = &dir.root_path;
 
         // Save info on the example we're running, so we can `--replay` it if needed
-        match examples.first() {
+        match examples_to_run.first() {
             Some(name) if !args.replay => {
                 save_last_replay(name, example_args_ref)?;
             }
             _ => {}
         };
 
-        for example in examples {
-            let name = example.as_ref();
-            let req_features: Option<&String> = name_to_required_features.get(name);
+        for example_name in examples_to_run {
+            let name = example_name.as_ref();
+            let example = example_files.get(name).unwrap();
 
             // Run the Cargo example script
-            args.cargo
-                .run_example(root_ref, name, example_args_ref, req_features)?;
+            args.cargo.run_example(
+                &example.path_type,
+                root_ref,
+                name,
+                example_args_ref,
+                &example.required_features,
+            )?;
         }
 
         Ok(())

@@ -1,0 +1,18 @@
+[package]
+name = "hello-world-multi-bin"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+
+[[bin]]
+name = "hello-world-bin1"
+path = "src/main.rs"
+
+[[bin]]
+name = "hello-world-bin2"
+path = "src/alt.rs"

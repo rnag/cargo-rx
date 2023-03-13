@@ -88,6 +88,7 @@ mod constants;
 mod models;
 // noinspection SpellCheckingInspection
 mod osstringext;
+mod pathbufext;
 mod run_ext;
 mod run_impl;
 mod types;
@@ -96,6 +97,7 @@ use cache::*;
 pub use constants::*;
 pub use models::*;
 pub use osstringext::*;
+pub use pathbufext::*;
 pub use run_ext::*;
 pub(crate) use run_impl::*;
 pub use types::*;
@@ -109,10 +111,9 @@ pub fn process_input(args: Args) -> Result<()> {
 
     let p = Paths::resolve()?;
 
-    let name_to_required_features = p.example_to_required_features()?;
-    let files = p.example_file_paths()?;
+    let files = p.example_files()?;
 
-    process_input_inner(files, p, args, name_to_required_features)
+    process_input_inner(files, &p, args)
 }
 
 /// This is a **patch** so that the `colored` output works as expected

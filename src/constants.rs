@@ -14,6 +14,8 @@ pub const RUST_FILE_EXT: &str = "rs";
 
 /// Name of the `Cargo.toml` file in Cargo projects
 pub const CARGO_TOML: &str = "Cargo.toml";
+/// Name of the `main.rs` file in Cargo projects
+pub const MAIN_RS: &str = "main.rs";
 /// Name of the `settings.toml` file for local project cache
 pub const SETTINGS_TOML: &str = "settings.toml";
 
