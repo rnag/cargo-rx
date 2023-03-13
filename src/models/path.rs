@@ -46,7 +46,7 @@ pub struct Paths {
 }
 
 /// Represents the *type* of an example file.
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ExampleType {
     /// This represents a *simple* example file, for ex. a `hello_world.rs`
     /// file in an `examples/` folder.
@@ -61,7 +61,7 @@ pub enum ExampleType {
     /// `Cargo.toml` file in an `examples/` folder; Note that Cargo (and
     /// notably `cargo run --example`) does not support this particular
     /// use-case, as of yet.
-    Crate(PathBuf),
+    Crate(PathBuf, Option<String>),
 
     /// This represents an example file with a *custom path* defined in the
     /// `Cargo.toml` file of a Cargo project.
@@ -69,7 +69,7 @@ pub enum ExampleType {
 }
 
 /// Represents an *example file* in a Cargo project.
-#[derive(Debug, Eq)]
+#[derive(Clone, Debug, Eq)]
 pub struct ExampleFile {
     /// The *file stem* (i.e. filename without the extension) for an
     /// example file, or the *folder name* in the case of a `main.rs`
@@ -170,7 +170,7 @@ impl TryFrom<PathBuf> for ExampleFile {
                 return Ok(Self {
                     name,
                     path,
-                    path_type: ExampleType::Crate(cargo_toml),
+                    path_type: ExampleType::Crate(cargo_toml, None),
                     required_features: None,
                 });
             }
@@ -344,6 +344,42 @@ impl Paths {
             }
 
             if let Ok(f) = ExampleFile::try_from(path) {
+                // if we have a Cargo crate (with its own `Cargo.toml`) in
+                // the `examples/` folder, we'll need to check that here.
+                if let ExampleType::Crate(ref cargo_toml, _) = f.path_type {
+                    let manifest_contents = fs::read_to_string(cargo_toml)?;
+                    let num_bins = manifest_contents.matches("[[bin]]").count();
+                    // if we have multiple binary (or `[[bin]]`) targets
+                    // listed in the `Cargo.toml`, then we'll need to
+                    // separately add each target as an example.
+                    if num_bins > 1 {
+                        let crate_dir = cargo_toml.parent().unwrap();
+                        let manifest = Manifest::from_str(&manifest_contents)?;
+                        // iterate over each binary target
+                        for ref bin in manifest.bin {
+                            if let Some(ref name) = bin.name {
+                                let key = Cow::Owned(name.to_owned());
+                                let path_type =
+                                    ExampleType::Crate(cargo_toml.clone(), Some(name.to_owned()));
+                                let path = if let Some(ref p) = bin.path {
+                                    Path::new(p).absolutize_from(crate_dir).unwrap().into()
+                                } else {
+                                    f.path.clone()
+                                };
+                                // add the binary target to the list of (runnable) files
+                                let bin_f = ExampleFile {
+                                    name: name.to_owned(),
+                                    path,
+                                    path_type,
+                                    required_features: required_features(bin),
+                                };
+                                files.insert(key, bin_f);
+                            }
+                        }
+                        continue;
+                    }
+                }
+
                 let key = Cow::Owned(f.name.to_owned());
 
                 // if the example name already exists in `Cargo.toml`, then

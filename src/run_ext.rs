@@ -32,16 +32,32 @@ pub trait RunExampleExt {
         <T as IntoIterator>::Item: AsRef<OsStr>;
 }
 
-/// Add `run --example <name>` as arguments to Command `cmd`
+/// Add `run --example <name>` (or `run --manifest-path <file>) as arguments to Command `cmd`
 #[inline]
 fn add_run_arg(cmd: &mut Command, name: &str, ex_type: &ExampleType, root_path: &Path) {
-    if let ExampleType::Crate(manifest_path) = ex_type {
+    /// call `run` with a `--manifest-path`
+    #[inline]
+    fn run_with_manifest<'a>(
+        cmd: &'a mut Command,
+        root_path: &'a Path,
+        manifest_path: &'a Path,
+    ) -> &'a mut Command {
         cmd.arg("run")
             .arg("--manifest-path")
-            .arg(manifest_path.strip_prefix(root_path).unwrap());
-    } else {
-        cmd.arg("run").arg("--example").arg(name);
+            .arg(manifest_path.strip_prefix(root_path).unwrap())
     }
+    match ex_type {
+        // call `run` with `--manifest-path`
+        ExampleType::Crate(manifest_path, None) => run_with_manifest(cmd, root_path, manifest_path),
+        // call `run` with `--manifest-path` and `--bin`
+        ExampleType::Crate(manifest_path, Some(bin)) => {
+            run_with_manifest(cmd, root_path, manifest_path)
+                .arg("--bin")
+                .arg(bin)
+        }
+        // call `run --example`
+        _ => cmd.arg("run").arg("--example").arg(name),
+    };
 }
 
 impl RunExampleExt for CommonOptions {
