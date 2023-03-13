@@ -14,7 +14,7 @@ mod inner_impl {
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_file_name_to_path: BTreeMap<Cow<'_, str>, ExampleFile>,
+        example_files: BTreeMap<Cow<'_, str>, ExampleFile>,
         dir: &Paths,
         args: Args,
     ) -> Result<()> {
@@ -28,7 +28,7 @@ mod inner_impl {
         } else if let Some(example) = args.name {
             vec![Cow::Owned(example)]
         } else {
-            let example_names: String = example_file_name_to_path
+            let example_names: String = example_files
                 .keys()
                 .map(|k| k.as_ref())
                 .collect::<Vec<_>>()
@@ -109,7 +109,7 @@ mod inner_impl {
 
         for example_name in examples_to_run {
             let name = example_name.as_ref();
-            let example = example_file_name_to_path.get(name).unwrap();
+            let example = example_files.get(name).unwrap();
 
             // Run the Cargo example script
             args.cargo.run_example(
@@ -138,7 +138,7 @@ mod inner_impl {
 
     //noinspection DuplicatedCode
     pub(crate) fn process_input_inner(
-        example_file_name_to_path: BTreeMap<Cow<'_, str>, ExampleFile>,
+        example_files: BTreeMap<Cow<'_, str>, ExampleFile>,
         dir: &Paths,
         args: Args,
     ) -> Result<()> {
@@ -162,7 +162,7 @@ mod inner_impl {
 
             let (tx_item, rx_item): (SkimItemSender, SkimItemReceiver) = unbounded();
 
-            for example in example_file_name_to_path.values() {
+            for example in example_files.values() {
                 let _ = tx_item.send(Arc::new(ExampleFileItem {
                     file_stem: example.name.clone(),
                     file_path: example.path.clone(),
@@ -231,7 +231,7 @@ mod inner_impl {
 
         for example_name in examples_to_run {
             let name = example_name.as_ref();
-            let example = example_file_name_to_path.get(name).unwrap();
+            let example = example_files.get(name).unwrap();
 
             // Run the Cargo example script
             args.cargo.run_example(

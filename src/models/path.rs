@@ -287,9 +287,9 @@ impl Paths {
         )))
     }
 
-    /// Returns an ordered (A -> Z) mapping of file name to paths (`PathBuf`
-    /// objects) of each *example* file in the Cargo project.
-    pub fn example_file_name_to_path(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
+    /// Returns an ordered (A -> Z) mapping of file name to resolved file
+    /// (`ExampleFile` objects) of each *example* file in the Cargo project.
+    pub fn example_files(&self) -> Result<BTreeMap<Cow<'_, str>, ExampleFile>> {
         let mut files: BTreeMap<Cow<'_, str>, _> = BTreeMap::new();
         let mut file_paths: HashSet<PathBuf> = HashSet::new();
 

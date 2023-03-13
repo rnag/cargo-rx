@@ -111,7 +111,7 @@ pub fn process_input(args: Args) -> Result<()> {
 
     let p = Paths::resolve()?;
 
-    let files = p.example_file_name_to_path()?;
+    let files = p.example_files()?;
 
     process_input_inner(files, &p, args)
 }
