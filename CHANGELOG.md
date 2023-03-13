@@ -17,6 +17,16 @@ Possible header types:
   - `other_method()`
 -->
 
+## v0.3.0 (2023-03-13)
+
+### Features
+- Add support for [Cargo crates with binaries] within the `examples/` folder,
+  each containing their own `Cargo.toml` file. 🎉
+  - This calls `cargo run --manifest-path <file>` internally, passing `--bin` in the case of multiple [binary targets].
+
+[Cargo crates with binaries]: https://github.com/rnag/cargo-rx/issues/19
+[binary targets]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#binaries
+
 ## v0.2.0 (2022-04-25)
 
 ### Breaking Changes

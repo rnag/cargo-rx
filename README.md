@@ -80,11 +80,13 @@ thus, the `fzf` tool serves as a stand-in alternative for now.
 * Fuzzy finder, which leverages [skim] to sort and search for *examples* in a Cargo project -- when called with just `rx`.
 * Pass arguments after `--` to the selected example.
 * Automatically [enables required-features] when running an example.
+* Support for nested [crates with binary targets].
 * Play back of most recently run example via the `--replay` option.
 * Automatically enables `+nightly` toolchain when passed in *unstable options* to `cargo run`, such as `--unit-graph`.
 
 [skim]: https://github.com/lotabout/skim
 [enables required-features]: https://github.com/rust-lang/cargo/issues/4663
+[crates with binary targets]: https://github.com/rnag/cargo-rx/issues/19
 
 ## Contributing
 
